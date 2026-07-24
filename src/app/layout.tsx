@@ -4,7 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Biodiversión | Guardería y estancia infantil en Cancún",
   description:
-    "Biodiversión es una guardería en Cancún (Av. Kohunlich 210, SM 50) con enfoque en el amor por la naturaleza. Atendemos bebés desde 45 días y niños hasta 8 años. Horarios flexibles, alimentación y seguridad para tu familia.",
+    "Biodiversión es una guardería en Cancún (Av. Kohunlich 210, SM 50) con enfoque en el amor por la naturaleza. Atendemos bebés desde 45 días y niños hasta 4 años. Horarios flexibles, alimentación y seguridad para tu familia.",
 };
 
 export default function RootLayout({

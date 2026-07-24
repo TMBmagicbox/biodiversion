@@ -10,6 +10,7 @@ import {
   Users,
   Clock3,
   CreditCard,
+  UserCog,
   LogOut,
 } from "lucide-react";
 
@@ -19,6 +20,7 @@ const items = [
   { href: "/admin/tutores", label: "Tutores", Icon: Users },
   { href: "/admin/asistencia", label: "Asistencia / Horas", Icon: Clock3 },
   { href: "/admin/pagos", label: "Pagos", Icon: CreditCard },
+  { href: "/admin/usuarios", label: "Usuarios del personal", Icon: UserCog },
 ];
 
 export default function Sidebar() {

@@ -32,7 +32,7 @@ export default function Navbar() {
           ))}
         </nav>
         <a
-          href="tel:+529983724752"
+          href="tel:+529981290100"
           className="flex items-center gap-2 rounded-full bg-brand-green px-4 py-2 text-sm font-extrabold text-white shadow-sm transition-transform hover:scale-105"
         >
           <PhoneCall className="h-4 w-4" strokeWidth={2.5} />

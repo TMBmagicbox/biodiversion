@@ -15,7 +15,7 @@ const servicios = [
   {
     titulo: "Estancia infantil",
     detalle:
-      "Guarda, custodia, aseo y cuidado diario para bebés desde 45 días de nacidos hasta niños de 8 años.",
+      "Guarda, custodia, aseo y cuidado diario para bebés desde 45 días de nacidos hasta niños de 4 años.",
     Icon: Baby,
   },
   {
@@ -71,7 +71,7 @@ export default function HomePage() {
               <span className="text-brand-green-dark">se divierta</span>
             </h1>
             <p className="mt-5 text-lg text-foreground/80">
-              Atendemos bebés desde 45 días de nacidos hasta niños de 8 años,
+              Atendemos bebés desde 45 días de nacidos hasta niños de 4 años,
               con horarios flexibles, alimentación cuidada y un enfoque
               educativo conectado con la naturaleza.
             </p>
@@ -213,8 +213,8 @@ export default function HomePage() {
             <ul className="mt-4 space-y-3 text-foreground/80">
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-brand-blue-dark" />
-                <a href="tel:+529983724752" className="font-bold hover:underline">
-                  998 372 4752
+                <a href="tel:+529981290100" className="font-bold hover:underline">
+                  998 129 0100
                 </a>
               </li>
               <li className="flex items-center gap-2">

@@ -42,8 +42,8 @@ export default function Footer() {
               <li>Av. Kohunlich 210, SM 50, 77533 Cancún, Q.R.</li>
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 shrink-0" />
-                <a href="tel:+529983724752" className="hover:underline">
-                  998 372 4752
+                <a href="tel:+529981290100" className="hover:underline">
+                  998 129 0100
                 </a>
               </li>
               <li className="flex items-center gap-2">

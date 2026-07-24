@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function cerrarSesion() {
   const supabase = await createClient();
@@ -124,4 +125,71 @@ export async function registrarPago(formData: FormData) {
   if (error) throw new Error(error.message);
   revalidatePath("/admin/pagos");
   redirect("/admin/pagos");
+}
+
+// ---------- Usuarios del personal (panel admin) ----------
+
+/** Si el usuario que inició sesión no tiene fila en perfiles_admin, se la crea
+ *  automáticamente como "admin" (bootstrap de la primera cuenta). */
+export async function asegurarPerfilPropio() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: existente } = await supabase
+    .from("perfiles_admin")
+    .select("id, nombre, rol")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (existente) return existente;
+
+  const { data: creado } = await supabase
+    .from("perfiles_admin")
+    .insert({
+      id: user.id,
+      nombre: user.email?.split("@")[0] ?? "Administrador",
+      rol: "admin",
+    })
+    .select("id, nombre, rol")
+    .single();
+
+  return creado ?? null;
+}
+
+export async function crearUsuarioPersonal(formData: FormData) {
+  const email = String(formData.get("email") || "");
+  const password = String(formData.get("password") || "");
+  const nombre = String(formData.get("nombre") || "");
+  const rol = String(formData.get("rol") || "educadora");
+
+  if (!email || !password || password.length < 6) {
+    throw new Error(
+      "Correo y contraseña son obligatorios (mínimo 6 caracteres).",
+    );
+  }
+
+  const admin = createAdminClient();
+
+  const { data: nuevoUsuario, error: errorAuth } =
+    await admin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+    });
+
+  if (errorAuth) throw new Error(errorAuth.message);
+
+  const { error: errorPerfil } = await admin.from("perfiles_admin").insert({
+    id: nuevoUsuario.user.id,
+    nombre,
+    rol,
+  });
+
+  if (errorPerfil) throw new Error(errorPerfil.message);
+
+  revalidatePath("/admin/usuarios");
+  redirect("/admin/usuarios");
 }

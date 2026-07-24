@@ -22,13 +22,16 @@ supabase/schema.sql     -> esquema completo de base de datos + seguridad (RLS)
    Esto crea todas las tablas (tutores, niños, asistencia, pagos, etc.) y
    las reglas de seguridad (RLS) para que solo el personal autenticado
    pueda leer/escribir datos.
-3. En **Authentication > Users**, invita o crea manualmente a los usuarios
-   del personal (director/a, educadoras, recepción) con correo y
-   contraseña. Ese será su acceso al panel `/admin`.
-4. Opcional: en la tabla `perfiles_admin`, agrega una fila por cada usuario
-   con su `id` (el mismo `id` de Authentication), `nombre` y `rol`.
-5. Copia la **URL del proyecto** y la **anon key** desde
-   *Project Settings > API*.
+3. Crea tu primer usuario (el tuyo) en **Authentication > Users** con tu
+   correo y contraseña — ese es tu acceso a `/admin`. Los siguientes
+   usuarios del personal ya se crean **desde el propio panel**, en
+   `/admin/usuarios` (ver sección más abajo), no hace falta volver a
+   Supabase para eso.
+4. Copia la **URL del proyecto** y la **anon/publishable key** desde
+   *Project Settings > API Keys*.
+5. En esa misma pantalla copia también la **secret key** (antes llamada
+   `service_role`) — la necesitas para poder crear usuarios desde el panel.
+   **Es secreta, nunca la compartas ni la pongas en variables `NEXT_PUBLIC_`.**
 
 ## 2. Variables de entorno
 
@@ -37,6 +40,7 @@ Copia `.env.example` a `.env.local` y llena los valores de Supabase:
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key
+SUPABASE_SERVICE_ROLE_KEY=tu-service-role-o-secret-key
 ```
 
 ## 3. Correr en local
@@ -73,8 +77,8 @@ proyecto).
 
 1. Importa el repo `biodiversion` desde GitHub en Vercel.
 2. Agrega las mismas variables de entorno (`NEXT_PUBLIC_SUPABASE_URL`,
-   `NEXT_PUBLIC_SUPABASE_ANON_KEY`) en *Project Settings > Environment
-   Variables*.
+   `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`) en
+   *Project Settings > Environment Variables*.
 3. Deploy. Cada push a `main` genera un nuevo despliegue automático.
 
 ## Módulos del panel administrativo
@@ -88,6 +92,10 @@ proyecto).
   (vista `asistencia_horas` en la base de datos).
 - **Pagos**: registro de mensualidad, comida, inscripción y extras, con
   método de pago y estatus (pagado / pendiente / vencido).
+- **Usuarios del personal** (`/admin/usuarios`): crear accesos nuevos
+  (correo + contraseña) para dirección, educadoras o recepción, sin salir
+  del panel ni tocar Supabase. Requiere la variable
+  `SUPABASE_SERVICE_ROLE_KEY` configurada (paso 1.5 arriba).
 
 ## Recomendaciones de control adicionales (ya incluidas en el esquema)
 
