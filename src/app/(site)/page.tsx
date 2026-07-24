@@ -57,6 +57,40 @@ const horarios = [
   { dia: "Domingo", horas: "Cerrado" },
 ];
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "ChildCare",
+  name: "Biodiversión",
+  description:
+    "Guardería y estancia infantil en Cancún para bebés desde 45 días hasta niños de 4 años.",
+  url: "https://biodiversion.vercel.app",
+  telephone: "+52-998-129-0100",
+  image: "https://biodiversion.vercel.app/images/logo.png",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "Av. Kohunlich 210, SM 50",
+    addressLocality: "Cancún",
+    addressRegion: "Quintana Roo",
+    postalCode: "77533",
+    addressCountry: "MX",
+  },
+  sameAs: ["https://www.facebook.com/biodiversion"],
+  openingHoursSpecification: [
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      opens: "07:00",
+      closes: "19:00",
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: "Saturday",
+      opens: "07:00",
+      closes: "16:00",
+    },
+  ],
+};
+
 export default async function HomePage() {
   const supabase = await createClient();
   const { data: slides } = await supabase
@@ -69,6 +103,10 @@ export default async function HomePage() {
 
   return (
     <div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Banner de inicio: 100% de ancho, slider con parallax */}
       <HeroSlider slides={slides ?? []} />
 

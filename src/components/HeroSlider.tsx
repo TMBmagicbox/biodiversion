@@ -16,7 +16,8 @@ export type HeroSlide = {
 
 const SLIDE_POR_DEFECTO: HeroSlide = {
   id: "default",
-  titulo: "Un lugar seguro para que tu hijo crezca, aprenda y se divierta",
+  titulo:
+    "Guardería y estancia infantil en Cancún: un lugar seguro para que tu hijo crezca, aprenda y se divierta",
   descripcion:
     "Atendemos bebés desde 45 días de nacidos hasta niños de 4 años, con horarios flexibles, alimentación cuidada y un enfoque educativo conectado con la naturaleza.",
   imagen_fondo_url: null,
