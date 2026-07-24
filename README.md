@@ -10,9 +10,10 @@ Auth) para el panel administrativo.
 ```
 src/app/(site)/        -> sitio público (info, servicios, horarios, ubicación)
 src/app/admin/login/    -> login del personal
-src/app/admin/(protected)/  -> panel: dashboard, niños, tutores, asistencia, pagos
-src/lib/supabase/       -> clientes de Supabase (browser, server, middleware)
+src/app/admin/(protected)/  -> panel: dashboard, familias, asistencia, pagos, banner de inicio
+src/lib/supabase/       -> clientes de Supabase (browser, server, middleware, admin, storage)
 supabase/schema.sql     -> esquema completo de base de datos + seguridad (RLS)
+supabase/migration_002_fotos_y_slides.sql -> foto de tutores, tabla hero_slides y bucket de fotos
 ```
 
 ## 1. Configurar Supabase
@@ -32,6 +33,12 @@ supabase/schema.sql     -> esquema completo de base de datos + seguridad (RLS)
 5. En esa misma pantalla copia también la **secret key** (antes llamada
    `service_role`) — la necesitas para poder crear usuarios desde el panel.
    **Es secreta, nunca la compartas ni la pongas en variables `NEXT_PUBLIC_`.**
+6. En **SQL Editor**, pega y ejecuta también `supabase/migration_002_fotos_y_slides.sql`.
+   Esto agrega: la foto de cada tutor, la tabla `hero_slides` (banner de
+   inicio editable) y el bucket de almacenamiento **"fotos"** (con sus
+   permisos) donde se guardan las fotos de tutores, niños y del banner.
+   Sin este paso, la sección **Familias** (fotos) y **Banner de inicio**
+   del panel darán error.
 
 ## 2. Variables de entorno
 
@@ -83,15 +90,22 @@ proyecto).
 
 ## Módulos del panel administrativo
 
-- **Niños**: alta con datos del niño y de salud (alergias, tipo de sangre,
-  pediatra, vacunas).
-- **Tutores**: alta de tutores/padres, se pueden vincular a uno o varios
-  niños.
+El panel es responsivo (menú tipo hamburguesa en celular).
+
+- **Familias** (`/admin/familias`): tutor(es) con foto, y dentro de cada
+  familia uno o varios niños (cada uno con su propia foto y datos de
+  salud: alergias, tipo de sangre, pediatra, vacunas). Reemplaza los
+  antiguos módulos separados de "Niños" y "Tutores".
 - **Asistencia / control de horas**: registrar hora de entrada y salida por
   niño; calcula automáticamente las horas de estancia del día
   (vista `asistencia_horas` en la base de datos).
 - **Pagos**: registro de mensualidad, comida, inscripción y extras, con
   método de pago y estatus (pagado / pendiente / vencido).
+- **Banner de inicio** (`/admin/inicio`): administra el slider del banner
+  de la página principal — varias diapositivas, cada una con imagen de
+  fondo, logo en PNG (sin fondo), título, descripción, texto y URL del
+  botón, y si está visible o no. En el sitio público se muestra como un
+  slider con efecto parallax y cambio automático.
 - **Usuarios del personal** (`/admin/usuarios`): crear accesos nuevos
   (correo + contraseña) para dirección, educadoras o recepción, sin salir
   del panel ni tocar Supabase. Requiere la variable
