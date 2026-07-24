@@ -1,36 +1,146 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Biodiversión — sitio web + panel administrativo
 
-## Getting Started
+Sitio institucional y panel de administración para la guardería
+**Biodiversión** (Cancún, Q.R.). Construido con **Next.js 16 (App Router) +
+TypeScript + Tailwind CSS v4** para el frontend, y **Supabase** (Postgres +
+Auth) para el panel administrativo.
 
-First, run the development server:
+## Estructura
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+src/app/(site)/        -> sitio público (info, servicios, horarios, ubicación)
+src/app/admin/login/    -> login del personal
+src/app/admin/(protected)/  -> panel: dashboard, niños, tutores, asistencia, pagos
+src/lib/supabase/       -> clientes de Supabase (browser, server, middleware)
+supabase/schema.sql     -> esquema completo de base de datos + seguridad (RLS)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 1. Configurar Supabase
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Crea un proyecto gratis en [supabase.com](https://supabase.com).
+2. En **SQL Editor**, pega y ejecuta el contenido de `supabase/schema.sql`.
+   Esto crea todas las tablas (tutores, niños, asistencia, pagos, etc.) y
+   las reglas de seguridad (RLS) para que solo el personal autenticado
+   pueda leer/escribir datos.
+3. En **Authentication > Users**, invita o crea manualmente a los usuarios
+   del personal (director/a, educadoras, recepción) con correo y
+   contraseña. Ese será su acceso al panel `/admin`.
+4. Opcional: en la tabla `perfiles_admin`, agrega una fila por cada usuario
+   con su `id` (el mismo `id` de Authentication), `nombre` y `rol`.
+5. Copia la **URL del proyecto** y la **anon key** desde
+   *Project Settings > API*.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 2. Variables de entorno
 
-## Learn More
+Copia `.env.example` a `.env.local` y llena los valores de Supabase:
 
-To learn more about Next.js, take a look at the following resources:
+```
+NEXT_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 3. Correr en local
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm install
+npm run dev
+```
 
-## Deploy on Vercel
+Sitio público: http://localhost:3000
+Panel admin: http://localhost:3000/admin/login
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 4. Subir el código a GitHub (repo `biodiversion` ya creado)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Desde la carpeta del proyecto:
+
+```bash
+git init                     # si aún no es un repo git
+git add .
+git commit -m "Sitio y panel administrativo Biodiversión"
+git branch -M main
+git remote add origin https://github.com/TU-USUARIO/biodiversion.git
+git push -u origin main
+```
+
+Si el repo en GitHub ya tiene algo (README inicial, licencia, etc.), primero
+haz `git pull origin main --allow-unrelated-histories` antes del push, o
+crea el repo vacío (sin README) desde GitHub para evitar conflictos.
+
+## 5. Desplegar
+
+Recomendado: [Vercel](https://vercel.com/new) (gratis para este tamaño de
+proyecto).
+
+1. Importa el repo `biodiversion` desde GitHub en Vercel.
+2. Agrega las mismas variables de entorno (`NEXT_PUBLIC_SUPABASE_URL`,
+   `NEXT_PUBLIC_SUPABASE_ANON_KEY`) en *Project Settings > Environment
+   Variables*.
+3. Deploy. Cada push a `main` genera un nuevo despliegue automático.
+
+## Módulos del panel administrativo
+
+- **Niños**: alta con datos del niño y de salud (alergias, tipo de sangre,
+  pediatra, vacunas).
+- **Tutores**: alta de tutores/padres, se pueden vincular a uno o varios
+  niños.
+- **Asistencia / control de horas**: registrar hora de entrada y salida por
+  niño; calcula automáticamente las horas de estancia del día
+  (vista `asistencia_horas` en la base de datos).
+- **Pagos**: registro de mensualidad, comida, inscripción y extras, con
+  método de pago y estatus (pagado / pendiente / vencido).
+
+## Recomendaciones de control adicionales (ya incluidas en el esquema)
+
+El esquema (`supabase/schema.sql`) ya deja listas estas tablas para cuando
+las quieras usar desde el panel:
+
+- **`personas_autorizadas`**: personas distintas a los tutores autorizadas
+  a recoger al niño (con nombre, teléfono e identificación) — muy común y
+  recomendado en guarderías por seguridad.
+- **`incidentes`**: bitácora de accidentes, temas de salud o de
+  comportamiento, con la opción de marcar si ya se notificó al tutor.
+- **`planes_mensualidad`**: para dejar precargado el monto mensual y si
+  incluye comida, y así generar recordatorios de pago automáticos a
+  futuro.
+- Campos de salud en `ninos`: alergias, condiciones médicas, medicamentos,
+  tipo de sangre, pediatra y si las vacunas están al día.
+- **`camaras`**: tabla placeholder para cuando conectes las cámaras de
+  vigilancia (ver siguiente sección).
+
+Otras ideas útiles para una guardería que puedes ir agregando:
+
+- Registro de temperatura/estado de salud al llegar (ya hay un campo
+  `temperatura_entrada` en `asistencia`).
+- Reportes mensuales por niño (asistencia total, pagos, incidentes) en PDF.
+- Notificaciones automáticas por WhatsApp/correo a tutores (recordatorio de
+  pago, o cuando el niño es recogido).
+- Portal para tutores (solo lectura) donde vean asistencia y estado de
+  cuenta de su hijo — reutilizando las mismas tablas.
+- Control de inventario de pañales/artículos que cada niño deja en la
+  guardería.
+
+## Cámaras de vigilancia (fase futura)
+
+No se integran cámaras en esta primera versión, pero el esquema ya
+contempla la tabla `camaras` (nombre, ubicación, `stream_url`, si está
+activa y si es visible para tutores). El enfoque recomendado cuando llegue
+el momento:
+
+1. Las cámaras deben soportar streaming **RTSP/HLS** (la mayoría de marcas
+   modernas como Hikvision, Dahua, TP-Link Tapo, Reolink lo soportan).
+2. Se necesita un servicio intermedio (ej. un mini servidor con
+   [MediaMTX](https://github.com/bluenviron/mediamtx) o un proveedor como
+   Cloudflare Stream) que convierta el RTSP de las cámaras en un link HLS
+   seguro que el navegador pueda reproducir — los navegadores no
+   reproducen RTSP directo.
+3. Ese link se guarda en `camaras.stream_url` y se muestra en una nueva
+   sección `/admin/camaras` (y opcionalmente en un portal para tutores).
+4. Importante: revisar el aviso de privacidad con los padres antes de dar
+   acceso a cámaras en vivo.
+
+## Fotos del local
+
+En la sección "Nuestras instalaciones" de la página de inicio hay tarjetas
+de marcador de posición. Cuando tengas fotos reales del local, colócalas en
+`public/images/instalaciones/` y reemplaza esa sección en
+`src/app/(site)/page.tsx`.
