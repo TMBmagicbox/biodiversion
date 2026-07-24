@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { subirFoto } from "@/lib/supabase/storage";
 
 export async function cerrarSesion() {
   const supabase = await createClient();
@@ -11,9 +12,82 @@ export async function cerrarSesion() {
   redirect("/admin/login");
 }
 
-// ---------- Niños ----------
-export async function crearNino(formData: FormData) {
+// ---------- Familias (tutor + sus hijos, con fotos) ----------
+
+/** Crea un tutor y, en el mismo formulario, uno o más hijos vinculados. */
+export async function crearFamilia(formData: FormData) {
   const supabase = await createClient();
+
+  const fotoTutorUrl = await subirFoto(
+    supabase,
+    formData.get("tutor_foto"),
+    "tutores",
+  );
+
+  const { data: tutor, error } = await supabase
+    .from("tutores")
+    .insert({
+      nombre: formData.get("nombre"),
+      apellido_paterno: formData.get("apellido_paterno"),
+      apellido_materno: formData.get("apellido_materno") || null,
+      telefono: formData.get("telefono"),
+      telefono_alternativo: formData.get("telefono_alternativo") || null,
+      email: formData.get("email") || null,
+      direccion: formData.get("direccion") || null,
+      foto_url: fotoTutorUrl,
+    })
+    .select("id")
+    .single();
+
+  if (error) throw new Error(error.message);
+
+  const nombres = formData.getAll("nino_nombre");
+  const apellidosP = formData.getAll("nino_apellido_paterno");
+  const apellidosM = formData.getAll("nino_apellido_materno");
+  const fechas = formData.getAll("nino_fecha_nacimiento");
+  const parentescos = formData.getAll("nino_parentesco");
+  const fotos = formData.getAll("nino_foto");
+
+  for (let i = 0; i < nombres.length; i++) {
+    const nombre = String(nombres[i] || "").trim();
+    const fecha = String(fechas[i] || "").trim();
+    if (!nombre || !fecha) continue; // fila vacía (no se agregó hijo aquí)
+
+    const fotoNinoUrl = await subirFoto(supabase, fotos[i] ?? null, "ninos");
+
+    const { data: nino, error: errorNino } = await supabase
+      .from("ninos")
+      .insert({
+        nombre,
+        apellido_paterno: String(apellidosP[i] || "").trim() || nombre,
+        apellido_materno: apellidosM[i] || null,
+        fecha_nacimiento: fecha,
+        foto_url: fotoNinoUrl,
+      })
+      .select("id")
+      .single();
+
+    if (errorNino) throw new Error(errorNino.message);
+
+    await supabase.from("tutores_ninos").insert({
+      tutor_id: tutor.id,
+      nino_id: nino.id,
+      parentesco: parentescos[i] || "tutor",
+      contacto_principal: i === 0,
+      autorizado_recoger: true,
+    });
+  }
+
+  revalidatePath("/admin/familias");
+  redirect(`/admin/familias/${tutor.id}`);
+}
+
+/** Agrega otro hijo a un tutor que ya existe. */
+export async function agregarNinoAFamilia(formData: FormData) {
+  const supabase = await createClient();
+  const tutorId = String(formData.get("tutor_id"));
+
+  const fotoUrl = await subirFoto(supabase, formData.get("foto"), "ninos");
 
   const { data: nino, error } = await supabase
     .from("ninos")
@@ -22,53 +96,23 @@ export async function crearNino(formData: FormData) {
       apellido_paterno: formData.get("apellido_paterno"),
       apellido_materno: formData.get("apellido_materno") || null,
       fecha_nacimiento: formData.get("fecha_nacimiento"),
-      sexo: formData.get("sexo") || null,
-      salon: formData.get("salon") || null,
-      tipo_sangre: formData.get("tipo_sangre") || null,
-      alergias: formData.get("alergias") || null,
-      condiciones_medicas: formData.get("condiciones_medicas") || null,
-      pediatra_nombre: formData.get("pediatra_nombre") || null,
-      pediatra_telefono: formData.get("pediatra_telefono") || null,
-      vacunas_al_dia: formData.get("vacunas_al_dia") === "on",
+      foto_url: fotoUrl,
     })
     .select("id")
     .single();
 
   if (error) throw new Error(error.message);
 
-  const tutorId = formData.get("tutor_id");
-  if (tutorId && nino) {
-    await supabase.from("tutores_ninos").insert({
-      tutor_id: tutorId,
-      nino_id: nino.id,
-      parentesco: formData.get("parentesco") || "tutor",
-      contacto_principal: true,
-      autorizado_recoger: true,
-    });
-  }
-
-  revalidatePath("/admin/ninos");
-  redirect("/admin/ninos");
-}
-
-// ---------- Tutores ----------
-export async function crearTutor(formData: FormData) {
-  const supabase = await createClient();
-
-  const { error } = await supabase.from("tutores").insert({
-    nombre: formData.get("nombre"),
-    apellido_paterno: formData.get("apellido_paterno"),
-    apellido_materno: formData.get("apellido_materno") || null,
-    telefono: formData.get("telefono"),
-    telefono_alternativo: formData.get("telefono_alternativo") || null,
-    email: formData.get("email") || null,
-    direccion: formData.get("direccion") || null,
+  await supabase.from("tutores_ninos").insert({
+    tutor_id: tutorId,
+    nino_id: nino.id,
+    parentesco: formData.get("parentesco") || "tutor",
+    contacto_principal: false,
+    autorizado_recoger: true,
   });
 
-  if (error) throw new Error(error.message);
-
-  revalidatePath("/admin/tutores");
-  redirect("/admin/tutores");
+  revalidatePath(`/admin/familias/${tutorId}`);
+  redirect(`/admin/familias/${tutorId}`);
 }
 
 // ---------- Asistencia ----------
@@ -192,4 +236,65 @@ export async function crearUsuarioPersonal(formData: FormData) {
 
   revalidatePath("/admin/usuarios");
   redirect("/admin/usuarios");
+}
+
+// ---------- Slides del banner de inicio ----------
+
+export async function crearHeroSlide(formData: FormData) {
+  const supabase = await createClient();
+
+  const imagenFondoUrl = await subirFoto(
+    supabase,
+    formData.get("imagen_fondo"),
+    "hero",
+  );
+  const logoUrl = await subirFoto(supabase, formData.get("logo"), "hero");
+
+  const { count } = await supabase
+    .from("hero_slides")
+    .select("*", { count: "exact", head: true });
+
+  const { error } = await supabase.from("hero_slides").insert({
+    titulo: formData.get("titulo"),
+    descripcion: formData.get("descripcion") || null,
+    imagen_fondo_url: imagenFondoUrl,
+    logo_url: logoUrl,
+    texto_boton: formData.get("texto_boton") || "Agenda una visita",
+    url_boton: formData.get("url_boton") || "#contacto",
+    orden: count ?? 0,
+  });
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/admin/inicio");
+  revalidatePath("/");
+  redirect("/admin/inicio");
+}
+
+export async function eliminarHeroSlide(formData: FormData) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("hero_slides")
+    .delete()
+    .eq("id", formData.get("id"));
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/admin/inicio");
+  revalidatePath("/");
+}
+
+export async function alternarHeroSlide(formData: FormData) {
+  const supabase = await createClient();
+  const activo = formData.get("activo") === "true";
+
+  const { error } = await supabase
+    .from("hero_slides")
+    .update({ activo: !activo })
+    .eq("id", formData.get("id"));
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/admin/inicio");
+  revalidatePath("/");
 }

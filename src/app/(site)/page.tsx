@@ -1,4 +1,3 @@
-import Image from "next/image";
 import {
   Baby,
   Apple,
@@ -10,6 +9,8 @@ import {
   ImageIcon,
 } from "lucide-react";
 import FacebookIcon from "@/components/icons/FacebookIcon";
+import HeroSlider from "@/components/HeroSlider";
+import { createClient } from "@/lib/supabase/server";
 
 const servicios = [
   {
@@ -56,57 +57,26 @@ const horarios = [
   { dia: "Domingo", horas: "Cerrado" },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createClient();
+  const { data: slides } = await supabase
+    .from("hero_slides")
+    .select(
+      "id, titulo, descripcion, imagen_fondo_url, logo_url, texto_boton, url_boton",
+    )
+    .eq("activo", true)
+    .order("orden", { ascending: true });
+
   return (
-    <div className="space-y-6 px-3 pb-6 sm:px-6">
-      {/* Hero */}
-      <section className="glass-strong overflow-hidden rounded-3xl">
-        <div className="mx-auto grid max-w-6xl items-center gap-10 px-6 py-16 sm:px-10 md:grid-cols-2 md:py-24">
-          <div>
-            <p className="inline-block rounded-full bg-brand-green/15 px-4 py-1 text-sm font-bold text-brand-green-dark">
-              Guardería en Cancún · SM 50
-            </p>
-            <h1 className="mt-4 text-4xl font-black leading-tight text-brand-blue-dark sm:text-5xl">
-              Un lugar seguro para que tu hijo crezca, aprenda y{" "}
-              <span className="text-brand-green-dark">se divierta</span>
-            </h1>
-            <p className="mt-5 text-lg text-foreground/80">
-              Atendemos bebés desde 45 días de nacidos hasta niños de 4 años,
-              con horarios flexibles, alimentación cuidada y un enfoque
-              educativo conectado con la naturaleza.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-4">
-              <a
-                href="#contacto"
-                className="rounded-full bg-brand-blue px-6 py-3 font-extrabold text-white shadow-md transition-transform hover:scale-105"
-              >
-                Agenda una visita
-              </a>
-              <a
-                href="#servicios"
-                className="glass rounded-full px-6 py-3 font-extrabold text-brand-green-dark transition-transform hover:scale-105"
-              >
-                Ver servicios
-              </a>
-            </div>
-          </div>
-          <div className="flex justify-center">
-            <div className="glass rounded-3xl p-8">
-              <Image
-                src="/images/logo.png"
-                alt="Biodiversión"
-                width={480}
-                height={200}
-                className="h-auto w-full max-w-sm"
-                priority
-              />
-            </div>
-          </div>
-        </div>
-      </section>
+    <div>
+      {/* Banner de inicio: 100% de ancho, slider con parallax */}
+      <HeroSlider slides={slides ?? []} />
 
       {/* Servicios */}
-      <section id="servicios" className="mx-auto max-w-6xl scroll-mt-24 py-4">
+      <section
+        id="servicios"
+        className="mx-auto max-w-6xl scroll-mt-24 px-3 py-16 sm:px-6"
+      >
         <h2 className="text-center text-3xl font-black text-brand-blue-dark">
           Nuestros servicios
         </h2>
@@ -132,15 +102,15 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Horarios */}
-      <section id="horarios" className="glass-strong scroll-mt-24 rounded-3xl py-16">
-        <div className="mx-auto max-w-4xl px-6 text-center">
+      {/* Horarios: 100% de ancho */}
+      <section id="horarios" className="glass w-full scroll-mt-24 py-16">
+        <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
           <h2 className="text-3xl font-black text-brand-blue-dark">
             Horarios de atención
           </h2>
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             {horarios.map((h) => (
-              <div key={h.dia} className="glass rounded-2xl p-6">
+              <div key={h.dia} className="glass-strong rounded-2xl p-6">
                 <p className="font-extrabold text-brand-green-dark">
                   {h.dia}
                 </p>
@@ -159,7 +129,10 @@ export default function HomePage() {
       </section>
 
       {/* Instalaciones / fotos */}
-      <section id="instalaciones" className="mx-auto max-w-6xl scroll-mt-24 py-4">
+      <section
+        id="instalaciones"
+        className="mx-auto max-w-6xl scroll-mt-24 px-3 py-16 sm:px-6"
+      >
         <h2 className="text-center text-3xl font-black text-brand-blue-dark">
           Nuestras instalaciones
         </h2>
@@ -184,9 +157,9 @@ export default function HomePage() {
         </p>
       </section>
 
-      {/* Ubicación + Contacto */}
-      <section id="ubicacion" className="glass-strong scroll-mt-24 rounded-3xl py-16">
-        <div className="mx-auto grid max-w-6xl gap-10 px-6 sm:px-10 md:grid-cols-2">
+      {/* Ubicación + Contacto: 100% de ancho */}
+      <section id="ubicacion" className="glass w-full scroll-mt-24 py-16">
+        <div className="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 md:grid-cols-2">
           <div>
             <h2 className="text-3xl font-black text-brand-blue-dark">
               Ubicación
@@ -194,7 +167,7 @@ export default function HomePage() {
             <p className="mt-3 text-foreground/70">
               Av. Kohunlich 210, SM 50, C.P. 77533, Cancún, Quintana Roo.
             </p>
-            <div className="glass mt-6 overflow-hidden rounded-2xl p-2">
+            <div className="glass-strong mt-6 overflow-hidden rounded-2xl p-2">
               <iframe
                 title="Ubicación Biodiversión"
                 width="100%"
@@ -229,7 +202,7 @@ export default function HomePage() {
                 </a>
               </li>
             </ul>
-            <form className="glass mt-6 space-y-4 rounded-2xl p-6">
+            <form className="glass-strong mt-6 space-y-4 rounded-2xl p-6">
               <div>
                 <label className="text-sm font-bold text-brand-blue-dark">
                   Nombre
