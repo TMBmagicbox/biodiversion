@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #f4f9f7;
   --foreground: #1f2a24;
 
   --color-brand-blue: #0090c2;
@@ -29,4 +29,60 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: "Nunito", ui-rounded, system-ui, Arial, Helvetica, sans-serif;
+}
+
+/* Fondo con manchas de color difuminadas, fijo detrás de todo el contenido */
+.ambient-blobs {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ambient-blobs::before,
+.ambient-blobs::after {
+  content: "";
+  position: absolute;
+  width: 42rem;
+  height: 42rem;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.35;
+}
+
+.ambient-blobs::before {
+  top: -12rem;
+  left: -10rem;
+  background: var(--color-brand-blue);
+}
+
+.ambient-blobs::after {
+  bottom: -14rem;
+  right: -10rem;
+  background: var(--color-brand-green);
+}
+
+/* Vidrio opaco: paneles translúcidos con blur, para tarjetas, nav, forms */
+.glass {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 32px rgba(0, 60, 80, 0.1);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 8px 32px rgba(0, 60, 80, 0.12);
+}
+
+.glass-dark {
+  background: rgba(0, 40, 55, 0.55);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }

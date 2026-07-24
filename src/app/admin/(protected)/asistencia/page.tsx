@@ -30,7 +30,7 @@ export default async function AsistenciaPage() {
 
       <form
         action={registrarEntrada}
-        className="mt-6 flex flex-wrap items-end gap-4 rounded-2xl bg-white p-6 shadow-sm"
+        className="glass mt-6 flex flex-wrap items-end gap-4 rounded-2xl p-6"
       >
         <div>
           <label className="text-sm font-bold text-brand-blue-dark">Niño</label>
@@ -65,7 +65,7 @@ export default async function AsistenciaPage() {
         </button>
       </form>
 
-      <div className="mt-6 overflow-hidden rounded-2xl border border-black/5 bg-white shadow-sm">
+      <div className="glass mt-6 overflow-hidden rounded-2xl">
         <table className="w-full text-left text-sm">
           <thead className="bg-brand-blue-light text-brand-blue-dark">
             <tr>

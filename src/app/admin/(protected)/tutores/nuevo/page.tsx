@@ -6,7 +6,7 @@ export default function NuevoTutorPage() {
       <h1 className="text-2xl font-black text-brand-blue-dark">
         Nuevo tutor
       </h1>
-      <form action={crearTutor} className="mt-6 space-y-4 rounded-2xl bg-white p-6 shadow-sm">
+      <form action={crearTutor} className="glass mt-6 space-y-4 rounded-2xl p-6">
         <div className="grid gap-4 sm:grid-cols-2">
           <Campo label="Nombre" name="nombre" required />
           <Campo label="Apellido paterno" name="apellido_paterno" required />

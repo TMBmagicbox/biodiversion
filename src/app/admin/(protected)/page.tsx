@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { Baby, Clock3, CreditCard } from "lucide-react";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -18,9 +19,9 @@ export default async function DashboardPage() {
     ]);
 
   const tarjetas = [
-    { label: "Niños activos", value: totalNinos ?? 0, icon: "🧒" },
-    { label: "Presentes hoy", value: presentesHoy ?? 0, icon: "⏱️" },
-    { label: "Pagos pendientes", value: pagosPendientes ?? 0, icon: "💳" },
+    { label: "Niños activos", value: totalNinos ?? 0, Icon: Baby },
+    { label: "Presentes hoy", value: presentesHoy ?? 0, Icon: Clock3 },
+    { label: "Pagos pendientes", value: pagosPendientes ?? 0, Icon: CreditCard },
   ];
 
   return (
@@ -33,16 +34,15 @@ export default async function DashboardPage() {
       </p>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        {tarjetas.map((t) => (
-          <div
-            key={t.label}
-            className="rounded-2xl border border-black/5 bg-white p-6 shadow-sm"
-          >
-            <div className="text-3xl">{t.icon}</div>
-            <p className="mt-2 text-3xl font-black text-brand-blue-dark">
-              {t.value}
+        {tarjetas.map(({ label, value, Icon }) => (
+          <div key={label} className="glass rounded-2xl p-6">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-blue/10 text-brand-blue-dark">
+              <Icon className="h-5 w-5" strokeWidth={2.25} />
+            </div>
+            <p className="mt-3 text-3xl font-black text-brand-blue-dark">
+              {value}
             </p>
-            <p className="text-sm text-foreground/60">{t.label}</p>
+            <p className="text-sm text-foreground/60">{label}</p>
           </div>
         ))}
       </div>

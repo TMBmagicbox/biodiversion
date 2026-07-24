@@ -1,41 +1,52 @@
 import Image from "next/image";
+import {
+  Baby,
+  Apple,
+  Sprout,
+  Leaf,
+  HeartHandshake,
+  ShieldCheck,
+  Phone,
+  ImageIcon,
+} from "lucide-react";
+import FacebookIcon from "@/components/icons/FacebookIcon";
 
 const servicios = [
   {
     titulo: "Estancia infantil",
     detalle:
       "Guarda, custodia, aseo y cuidado diario para bebés desde 45 días de nacidos hasta niños de 8 años.",
-    icono: "🧸",
+    Icon: Baby,
   },
   {
     titulo: "Alimentación",
     detalle:
       "Menús balanceados y horarios de comida personalizados según la edad y necesidades de cada niño.",
-    icono: "🍎",
+    Icon: Apple,
   },
   {
     titulo: "Estimulación y desarrollo",
     detalle:
       "Actividades de estimulación temprana, motricidad y autonomía con seguimiento individual.",
-    icono: "🌱",
+    Icon: Sprout,
   },
   {
     titulo: "Contacto con la naturaleza",
     detalle:
       "Juegos al aire libre y actividades ecológicas que fomentan el amor por la biodiversidad.",
-    icono: "🌿",
+    Icon: Leaf,
   },
   {
     titulo: "Valores",
     detalle:
       "Respeto, responsabilidad y compañerismo como base de la convivencia diaria.",
-    icono: "🤝",
+    Icon: HeartHandshake,
   },
   {
     titulo: "Seguridad",
     detalle:
       "Cámaras de vigilancia, chapas eléctricas, salidas de emergencia y personal capacitado.",
-    icono: "🔒",
+    Icon: ShieldCheck,
   },
 ];
 
@@ -47,10 +58,10 @@ const horarios = [
 
 export default function HomePage() {
   return (
-    <div>
+    <div className="space-y-6 px-3 pb-6 sm:px-6">
       {/* Hero */}
-      <section className="relative overflow-hidden bg-brand-blue-light">
-        <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 sm:px-6 md:grid-cols-2 md:py-24">
+      <section className="glass-strong overflow-hidden rounded-3xl">
+        <div className="mx-auto grid max-w-6xl items-center gap-10 px-6 py-16 sm:px-10 md:grid-cols-2 md:py-24">
           <div>
             <p className="inline-block rounded-full bg-brand-green/15 px-4 py-1 text-sm font-bold text-brand-green-dark">
               Guardería en Cancún · SM 50
@@ -73,27 +84,29 @@ export default function HomePage() {
               </a>
               <a
                 href="#servicios"
-                className="rounded-full border-2 border-brand-green px-6 py-3 font-extrabold text-brand-green-dark transition-transform hover:scale-105"
+                className="glass rounded-full px-6 py-3 font-extrabold text-brand-green-dark transition-transform hover:scale-105"
               >
                 Ver servicios
               </a>
             </div>
           </div>
           <div className="flex justify-center">
-            <Image
-              src="/images/logo.png"
-              alt="Biodiversión"
-              width={520}
-              height={220}
-              className="h-auto w-full max-w-md drop-shadow-xl"
-              priority
-            />
+            <div className="glass rounded-3xl p-8">
+              <Image
+                src="/images/logo.png"
+                alt="Biodiversión"
+                width={480}
+                height={200}
+                className="h-auto w-full max-w-sm"
+                priority
+              />
+            </div>
           </div>
         </div>
       </section>
 
       {/* Servicios */}
-      <section id="servicios" className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+      <section id="servicios" className="mx-auto max-w-6xl scroll-mt-24 py-4">
         <h2 className="text-center text-3xl font-black text-brand-blue-dark">
           Nuestros servicios
         </h2>
@@ -102,33 +115,32 @@ export default function HomePage() {
           niño.
         </p>
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {servicios.map((s) => (
+          {servicios.map(({ titulo, detalle, Icon }) => (
             <div
-              key={s.titulo}
-              className="rounded-2xl border border-black/5 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+              key={titulo}
+              className="glass rounded-2xl p-6 transition-transform hover:-translate-y-1"
             >
-              <div className="text-4xl">{s.icono}</div>
-              <h3 className="mt-3 font-extrabold text-brand-blue-dark">
-                {s.titulo}
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-blue/10 text-brand-blue-dark">
+                <Icon className="h-6 w-6" strokeWidth={2} />
+              </div>
+              <h3 className="mt-4 font-extrabold text-brand-blue-dark">
+                {titulo}
               </h3>
-              <p className="mt-2 text-sm text-foreground/70">{s.detalle}</p>
+              <p className="mt-2 text-sm text-foreground/70">{detalle}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Horarios */}
-      <section id="horarios" className="bg-brand-green-light py-16">
-        <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
+      <section id="horarios" className="glass-strong scroll-mt-24 rounded-3xl py-16">
+        <div className="mx-auto max-w-4xl px-6 text-center">
           <h2 className="text-3xl font-black text-brand-blue-dark">
             Horarios de atención
           </h2>
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             {horarios.map((h) => (
-              <div
-                key={h.dia}
-                className="rounded-2xl bg-white p-6 shadow-sm"
-              >
+              <div key={h.dia} className="glass rounded-2xl p-6">
                 <p className="font-extrabold text-brand-green-dark">
                   {h.dia}
                 </p>
@@ -147,7 +159,7 @@ export default function HomePage() {
       </section>
 
       {/* Instalaciones / fotos */}
-      <section id="instalaciones" className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+      <section id="instalaciones" className="mx-auto max-w-6xl scroll-mt-24 py-4">
         <h2 className="text-center text-3xl font-black text-brand-blue-dark">
           Nuestras instalaciones
         </h2>
@@ -159,9 +171,10 @@ export default function HomePage() {
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="flex aspect-square items-center justify-center rounded-2xl bg-gradient-to-br from-brand-blue-light to-brand-green-light text-sm font-bold text-brand-blue-dark/50"
+              className="glass flex aspect-square flex-col items-center justify-center gap-2 rounded-2xl text-brand-blue-dark/50"
             >
-              Foto próximamente
+              <ImageIcon className="h-8 w-8" strokeWidth={1.5} />
+              <span className="text-sm font-bold">Foto próximamente</span>
             </div>
           ))}
         </div>
@@ -172,8 +185,8 @@ export default function HomePage() {
       </section>
 
       {/* Ubicación + Contacto */}
-      <section id="ubicacion" className="bg-brand-blue-light py-16">
-        <div className="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 md:grid-cols-2">
+      <section id="ubicacion" className="glass-strong scroll-mt-24 rounded-3xl py-16">
+        <div className="mx-auto grid max-w-6xl gap-10 px-6 sm:px-10 md:grid-cols-2">
           <div>
             <h2 className="text-3xl font-black text-brand-blue-dark">
               Ubicación
@@ -181,30 +194,31 @@ export default function HomePage() {
             <p className="mt-3 text-foreground/70">
               Av. Kohunlich 210, SM 50, C.P. 77533, Cancún, Quintana Roo.
             </p>
-            <div className="mt-6 overflow-hidden rounded-2xl shadow-md">
+            <div className="glass mt-6 overflow-hidden rounded-2xl p-2">
               <iframe
                 title="Ubicación Biodiversión"
                 width="100%"
                 height="300"
                 loading="lazy"
+                className="rounded-xl"
                 style={{ border: 0 }}
                 src="https://www.google.com/maps?q=Av.+Kohunlich+210,+SM+50,+77533+Canc%C3%BAn,+Q.R.&output=embed"
               />
             </div>
           </div>
-          <div id="contacto">
+          <div id="contacto" className="scroll-mt-24">
             <h2 className="text-3xl font-black text-brand-blue-dark">
               Contacto
             </h2>
             <ul className="mt-4 space-y-3 text-foreground/80">
-              <li>
-                📞{" "}
+              <li className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-brand-blue-dark" />
                 <a href="tel:+529983724752" className="font-bold hover:underline">
                   998 372 4752
                 </a>
               </li>
-              <li>
-                📘{" "}
+              <li className="flex items-center gap-2">
+                <FacebookIcon className="h-4 w-4 text-brand-blue-dark" />
                 <a
                   href="https://www.facebook.com/biodiversion"
                   target="_blank"
@@ -215,14 +229,14 @@ export default function HomePage() {
                 </a>
               </li>
             </ul>
-            <form className="mt-6 space-y-4 rounded-2xl bg-white p-6 shadow-sm">
+            <form className="glass mt-6 space-y-4 rounded-2xl p-6">
               <div>
                 <label className="text-sm font-bold text-brand-blue-dark">
                   Nombre
                 </label>
                 <input
                   type="text"
-                  className="mt-1 w-full rounded-lg border border-black/10 px-3 py-2"
+                  className="mt-1 w-full rounded-lg border border-black/10 bg-white/70 px-3 py-2"
                   placeholder="Tu nombre"
                 />
               </div>
@@ -232,7 +246,7 @@ export default function HomePage() {
                 </label>
                 <input
                   type="text"
-                  className="mt-1 w-full rounded-lg border border-black/10 px-3 py-2"
+                  className="mt-1 w-full rounded-lg border border-black/10 bg-white/70 px-3 py-2"
                   placeholder="¿Cómo te contactamos?"
                 />
               </div>
@@ -242,7 +256,7 @@ export default function HomePage() {
                 </label>
                 <textarea
                   rows={3}
-                  className="mt-1 w-full rounded-lg border border-black/10 px-3 py-2"
+                  className="mt-1 w-full rounded-lg border border-black/10 bg-white/70 px-3 py-2"
                   placeholder="Cuéntanos sobre tu hijo/a y qué información necesitas"
                 />
               </div>

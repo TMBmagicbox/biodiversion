@@ -31,8 +31,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-brand-blue-light px-4">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-lg">
+    <div className="flex min-h-screen items-center justify-center px-4">
+      <div className="glass-strong w-full max-w-sm rounded-3xl p-8">
         <div className="flex justify-center">
           <Image
             src="/images/logo.png"
@@ -55,7 +55,7 @@ export default function LoginPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-black/10 px-3 py-2"
+              className="mt-1 w-full rounded-lg border border-black/10 bg-white/70 px-3 py-2"
             />
           </div>
           <div>
@@ -67,7 +67,7 @@ export default function LoginPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-black/10 px-3 py-2"
+              className="mt-1 w-full rounded-lg border border-black/10 bg-white/70 px-3 py-2"
             />
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}

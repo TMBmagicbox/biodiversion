@@ -13,7 +13,7 @@ export default async function NuevoNinoPage() {
       <h1 className="text-2xl font-black text-brand-blue-dark">
         Nuevo niño
       </h1>
-      <form action={crearNino} className="mt-6 space-y-6 rounded-2xl bg-white p-6 shadow-sm">
+      <form action={crearNino} className="glass mt-6 space-y-6 rounded-2xl p-6">
         <fieldset className="grid gap-4 sm:grid-cols-2">
           <legend className="mb-2 font-extrabold text-brand-blue-dark">
             Datos del niño

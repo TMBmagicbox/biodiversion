@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { PhoneCall } from "lucide-react";
 
 const links = [
   { href: "#servicios", label: "Servicios" },
@@ -11,8 +12,8 @@ const links = [
 
 export default function Navbar() {
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-black/5">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-2 sm:px-6">
+    <header className="sticky top-0 z-50 px-3 pt-3 sm:px-6">
+      <div className="glass mx-auto flex max-w-6xl items-center justify-between rounded-2xl px-4 py-2">
         <Link href="/" className="flex items-center gap-2">
           <Image
             src="/images/logo.png"
@@ -32,8 +33,9 @@ export default function Navbar() {
         </nav>
         <a
           href="tel:+529983724752"
-          className="rounded-full bg-brand-green px-4 py-2 text-sm font-extrabold text-white shadow-sm transition-transform hover:scale-105"
+          className="flex items-center gap-2 rounded-full bg-brand-green px-4 py-2 text-sm font-extrabold text-white shadow-sm transition-transform hover:scale-105"
         >
+          <PhoneCall className="h-4 w-4" strokeWidth={2.5} />
           Llámanos
         </a>
       </div>

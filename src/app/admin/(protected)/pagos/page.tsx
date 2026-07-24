@@ -19,7 +19,7 @@ export default async function PagosPage() {
 
       <form
         action={registrarPago}
-        className="mt-6 grid gap-4 rounded-2xl bg-white p-6 shadow-sm sm:grid-cols-3"
+        className="glass mt-6 grid gap-4 rounded-2xl p-6 sm:grid-cols-3"
       >
         <div>
           <label className="text-sm font-bold text-brand-blue-dark">Niño</label>
@@ -89,7 +89,7 @@ export default async function PagosPage() {
         </div>
       </form>
 
-      <div className="mt-6 overflow-hidden rounded-2xl border border-black/5 bg-white shadow-sm">
+      <div className="glass mt-6 overflow-hidden rounded-2xl">
         <table className="w-full text-left text-sm">
           <thead className="bg-brand-blue-light text-brand-blue-dark">
             <tr>

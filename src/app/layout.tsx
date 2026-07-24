@@ -26,7 +26,8 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-full flex flex-col bg-white text-[var(--foreground)]">
+      <body className="min-h-full flex flex-col bg-[var(--background)] text-[var(--foreground)]">
+        <div className="ambient-blobs" aria-hidden="true" />
         {children}
       </body>
     </html>

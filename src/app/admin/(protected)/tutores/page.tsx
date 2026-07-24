@@ -20,7 +20,7 @@ export default async function TutoresPage() {
         </Link>
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-2xl border border-black/5 bg-white shadow-sm">
+      <div className="glass mt-6 overflow-hidden rounded-2xl">
         <table className="w-full text-left text-sm">
           <thead className="bg-brand-blue-light text-brand-blue-dark">
             <tr>
