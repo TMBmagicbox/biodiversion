@@ -6,8 +6,7 @@ import BotonConfirmar from "@/components/admin/BotonConfirmar";
 import SelectorPlanPago from "@/components/admin/SelectorPlanPago";
 import BotonRecordatorios from "@/components/admin/BotonRecordatorios";
 import InvitarWhatsApp from "@/components/admin/InvitarWhatsApp";
-import CarruselDeudores from "@/components/admin/CarruselDeudores";
-import { estatusPago } from "@/lib/pagos";
+import { obtenerNinosPorVencerOVencidos } from "@/lib/deudores";
 
 const TIPO_LEGIBLE: Record<string, string> = {
   mensualidad: "Mensualidad",
@@ -17,37 +16,13 @@ const TIPO_LEGIBLE: Record<string, string> = {
   tarjeta_horas: "Tarjeta de horas",
 };
 
-type NinoCalendario = {
-  id: string;
-  nombre: string;
-  apellido_paterno: string;
-  foto_url: string | null;
-  salon: string | null;
-  plan: { nombre: string; tipo: string } | null;
-  proxima_fecha_pago: string | null;
-  tutores_ninos: {
-    parentesco: string | null;
-    contacto_principal: boolean;
-    tutor: {
-      nombre: string;
-      apellido_paterno: string;
-      telefono: string | null;
-    } | null;
-  }[];
-  personas_autorizadas: {
-    nombre: string;
-    parentesco: string | null;
-    telefono: string | null;
-  }[];
-};
-
 export default async function PagosPage() {
   const supabase = await createClient();
   const hoy = new Date().toLocaleDateString("en-CA", {
     timeZone: "America/Cancun",
   });
 
-  const [{ data: ninos }, { data: pagos }, { data: planes }, { data: calendario }] =
+  const [{ data: ninos }, { data: pagos }, { data: planes }, porVencerOVencidos] =
     await Promise.all([
       supabase.from("ninos").select("id, nombre, apellido_paterno").eq("activo", true).order("nombre"),
       supabase
@@ -60,42 +35,11 @@ export default async function PagosPage() {
         .select("id, nombre, tipo, monto, horas_incluidas")
         .eq("activo", true)
         .order("monto"),
-      supabase
-        .from("ninos")
-        .select(
-          "id, nombre, apellido_paterno, foto_url, salon, plan:planes(nombre, tipo), proxima_fecha_pago, tutores_ninos(parentesco, contacto_principal, tutor:tutores(nombre, apellido_paterno, telefono)), personas_autorizadas(nombre, parentesco, telefono)",
-        )
-        .eq("activo", true)
-        .not("proxima_fecha_pago", "is", null)
-        .order("proxima_fecha_pago", { ascending: true }),
+      obtenerNinosPorVencerOVencidos(hoy),
     ]);
-
-  const calendarioList = (calendario ?? []) as unknown as NinoCalendario[];
-  const porVencerOVencidos = calendarioList
-    .map((n) => ({ ...n, estatus: estatusPago(n.proxima_fecha_pago, hoy) }))
-    .filter((n) => n.estatus === "por_vencer" || n.estatus === "vencido");
-
-  const deudores = porVencerOVencidos.map((n) => ({
-    id: n.id,
-    nombreCompleto: `${n.nombre} ${n.apellido_paterno}`,
-    fotoUrl: n.foto_url,
-    salon: n.salon,
-    plan: n.plan,
-    proximaFechaPago: n.proxima_fecha_pago,
-    tutores: (n.tutores_ninos ?? [])
-      .filter((tn) => tn.tutor)
-      .map((tn) => ({
-        nombre: `${tn.tutor!.nombre} ${tn.tutor!.apellido_paterno}`,
-        parentesco: tn.parentesco,
-        telefono: tn.tutor!.telefono,
-      })),
-    personasAutorizadas: n.personas_autorizadas ?? [],
-  }));
 
   return (
     <div>
-      <CarruselDeudores deudores={deudores} hoyISO={hoy} />
-
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-black text-brand-blue-dark">Pagos</h1>
         <a

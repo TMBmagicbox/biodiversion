@@ -57,12 +57,15 @@ export default async function FamiliaDetallePage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
+  const hoy = new Date().toLocaleDateString("en-CA", {
+    timeZone: "America/Cancun",
+  });
 
   const [{ data: tutor }, { data: planes }] = await Promise.all([
     supabase
       .from("tutores")
       .select(
-        "*, tutores_ninos(parentesco, nino:ninos(id, nombre, apellido_paterno, apellido_materno, fecha_nacimiento, foto_url, salon, alergias, plan:planes(nombre, tipo), personas_autorizadas(id, nombre, parentesco, telefono, identificacion)))",
+        "*, tutores_ninos(parentesco, nino:ninos(id, nombre, apellido_paterno, apellido_materno, fecha_nacimiento, foto_url, salon, alergias, proxima_fecha_pago, plan:planes(nombre, tipo), personas_autorizadas(id, nombre, parentesco, telefono, identificacion)))",
       )
       .eq("id", id)
       .maybeSingle(),
@@ -154,6 +157,7 @@ export default async function FamiliaDetallePage({
               foto_url: string | null;
               salon: string | null;
               alergias: string | null;
+              proxima_fecha_pago: string | null;
               plan: { nombre: string; tipo: string } | null;
               personas_autorizadas: {
                 id: string;
@@ -171,6 +175,8 @@ export default async function FamiliaDetallePage({
                   nombreCompleto={`${tn.nino.nombre} ${tn.nino.apellido_paterno}`}
                   salon={tn.nino.salon}
                   plan={tn.nino.plan ?? null}
+                  proximaFechaPago={tn.nino.proxima_fecha_pago}
+                  hoyISO={hoy}
                   tutores={[
                     {
                       nombre: `${tutor.nombre} ${tutor.apellido_paterno}`,
@@ -179,18 +185,18 @@ export default async function FamiliaDetallePage({
                     },
                   ]}
                   personasAutorizadas={tn.nino.personas_autorizadas ?? []}
-                  className="flex h-16 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-green/10 text-brand-green-dark"
+                  className="flex h-24 w-[4.5rem] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-green/10 text-brand-green-dark"
                 >
                   {tn.nino.foto_url ? (
                     <Image
                       src={tn.nino.foto_url}
                       alt={tn.nino.nombre}
-                      width={48}
-                      height={64}
+                      width={72}
+                      height={96}
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <Baby className="h-7 w-7" strokeWidth={2} />
+                    <Baby className="h-9 w-9" strokeWidth={2} />
                   )}
                 </FichaIdentificacion>
                 <div className="flex-1">
