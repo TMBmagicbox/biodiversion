@@ -1,10 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, User, Baby, Pencil } from "lucide-react";
+import { ArrowLeft, User, Baby, Pencil, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { agregarNinoAFamilia } from "@/app/admin/actions";
+import {
+  agregarNinoAFamilia,
+  eliminarFamilia,
+  eliminarNino,
+} from "@/app/admin/actions";
 import FotoLightbox from "@/components/admin/FotoLightbox";
+import BotonConfirmar from "@/components/admin/BotonConfirmar";
 
 function edad(fechaNacimiento: string) {
   const nacimiento = new Date(fechaNacimiento);
@@ -76,13 +81,25 @@ export default async function FamiliaDetallePage({
             <p className="text-sm text-foreground/60">{tutor.direccion}</p>
           )}
         </div>
-        <Link
-          href={`/admin/familias/${tutor.id}/editar`}
-          className="flex shrink-0 items-center gap-1.5 rounded-full border-2 border-black/10 px-4 py-2 text-sm font-extrabold text-brand-blue-dark transition-colors hover:bg-white/60"
-        >
-          <Pencil className="h-4 w-4" />
-          Editar
-        </Link>
+        <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+          <Link
+            href={`/admin/familias/${tutor.id}/editar`}
+            className="flex items-center justify-center gap-1.5 rounded-full border-2 border-black/10 px-4 py-2 text-sm font-extrabold text-brand-blue-dark transition-colors hover:bg-white/60"
+          >
+            <Pencil className="h-4 w-4" />
+            Editar
+          </Link>
+          <form action={eliminarFamilia}>
+            <input type="hidden" name="tutor_id" value={tutor.id} />
+            <BotonConfirmar
+              mensaje={`¿Borrar por completo a ${tutor.nombre} ${tutor.apellido_paterno} y a sus hijos? Esta acción no se puede deshacer.`}
+              className="flex w-full items-center justify-center gap-1.5 rounded-full border-2 border-red-200 px-4 py-2 text-sm font-extrabold text-red-600 transition-colors hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4" />
+              Borrar familia
+            </BotonConfirmar>
+          </form>
+        </div>
       </div>
 
       <h2 className="mt-8 flex items-center gap-2 text-lg font-extrabold text-brand-blue-dark">
@@ -130,13 +147,25 @@ export default async function FamiliaDetallePage({
                     <p className="font-extrabold text-brand-blue-dark">
                       {tn.nino.nombre} {tn.nino.apellido_paterno}
                     </p>
-                    <Link
-                      href={`/admin/familias/${tutor.id}/ninos/${tn.nino.id}/editar`}
-                      aria-label={`Editar a ${tn.nino.nombre}`}
-                      className="shrink-0 text-brand-blue-dark hover:text-brand-blue"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Link>
+                    <div className="flex shrink-0 items-center gap-2.5">
+                      <Link
+                        href={`/admin/familias/${tutor.id}/ninos/${tn.nino.id}/editar`}
+                        aria-label={`Editar a ${tn.nino.nombre}`}
+                        className="text-brand-blue-dark hover:text-brand-blue"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Link>
+                      <form action={eliminarNino}>
+                        <input type="hidden" name="nino_id" value={tn.nino.id} />
+                        <input type="hidden" name="tutor_id" value={tutor.id} />
+                        <BotonConfirmar
+                          mensaje={`¿Borrar a ${tn.nino.nombre}?`}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </BotonConfirmar>
+                      </form>
+                    </div>
                   </div>
                   <p className="text-xs text-foreground/60">
                     {edad(tn.nino.fecha_nacimiento)} · {tn.parentesco}

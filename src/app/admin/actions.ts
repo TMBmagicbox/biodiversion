@@ -204,6 +204,60 @@ export async function actualizarNino(formData: FormData) {
   redirect(`/admin/familias/${tutorId}`);
 }
 
+/** Borra un tutor por completo. También borra a los hijos que se queden sin
+ * ningún otro tutor vinculado (útil para limpiar familias de prueba). */
+export async function eliminarFamilia(formData: FormData) {
+  const supabase = await createClient();
+  const tutorId = String(formData.get("tutor_id"));
+
+  const { data: vinculos } = await supabase
+    .from("tutores_ninos")
+    .select("nino_id")
+    .eq("tutor_id", tutorId);
+  const ninoIds = (vinculos ?? []).map((v) => v.nino_id as string);
+
+  const { error } = await supabase.from("tutores").delete().eq("id", tutorId);
+  if (error) throw new Error(error.message);
+
+  for (const ninoId of ninoIds) {
+    const { count } = await supabase
+      .from("tutores_ninos")
+      .select("*", { count: "exact", head: true })
+      .eq("nino_id", ninoId);
+    if (!count) {
+      await supabase.from("ninos").delete().eq("id", ninoId);
+    }
+  }
+
+  revalidatePath("/admin/familias");
+  redirect("/admin/familias");
+}
+
+/** Borra a un hijo/a de una familia. Si se queda sin ningún tutor vinculado,
+ * borra también su registro de niño. */
+export async function eliminarNino(formData: FormData) {
+  const supabase = await createClient();
+  const ninoId = String(formData.get("nino_id"));
+  const tutorId = String(formData.get("tutor_id"));
+
+  await supabase
+    .from("tutores_ninos")
+    .delete()
+    .eq("nino_id", ninoId)
+    .eq("tutor_id", tutorId);
+
+  const { count } = await supabase
+    .from("tutores_ninos")
+    .select("*", { count: "exact", head: true })
+    .eq("nino_id", ninoId);
+  if (!count) {
+    await supabase.from("ninos").delete().eq("id", ninoId);
+  }
+
+  revalidatePath(`/admin/familias/${tutorId}`);
+  redirect(`/admin/familias/${tutorId}`);
+}
+
 // ---------- Asistencia ----------
 export async function registrarEntrada(formData: FormData) {
   const supabase = await createClient();
