@@ -70,6 +70,7 @@ export default async function EditarPagoPage({
             className="mt-1 w-full rounded-lg border border-black/10 px-3 py-2"
           >
             <option value="mensualidad">Mensualidad</option>
+            <option value="tarjeta_horas">Tarjeta de horas</option>
             <option value="comida">Comida</option>
             <option value="inscripcion">Inscripción</option>
             <option value="extra">Extra</option>

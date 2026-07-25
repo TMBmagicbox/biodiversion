@@ -3,17 +3,31 @@ import { Download, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { registrarPago, eliminarPago } from "@/app/admin/actions";
 import BotonConfirmar from "@/components/admin/BotonConfirmar";
+import SelectorPlanPago from "@/components/admin/SelectorPlanPago";
+
+const TIPO_LEGIBLE: Record<string, string> = {
+  mensualidad: "Mensualidad",
+  comida: "Comida",
+  inscripcion: "Inscripción",
+  extra: "Extra",
+  tarjeta_horas: "Tarjeta de horas",
+};
 
 export default async function PagosPage() {
   const supabase = await createClient();
 
-  const [{ data: ninos }, { data: pagos }] = await Promise.all([
+  const [{ data: ninos }, { data: pagos }, { data: planes }] = await Promise.all([
     supabase.from("ninos").select("id, nombre, apellido_paterno").eq("activo", true).order("nombre"),
     supabase
       .from("pagos")
       .select("*, ninos(nombre, apellido_paterno)")
       .order("fecha_pago", { ascending: false })
       .limit(50),
+    supabase
+      .from("planes")
+      .select("id, nombre, tipo, monto, horas_incluidas")
+      .eq("activo", true)
+      .order("monto"),
   ]);
 
   return (
@@ -44,10 +58,17 @@ export default async function PagosPage() {
             ))}
           </select>
         </div>
+        <SelectorPlanPago planes={planes ?? []} />
         <div>
           <label className="text-sm font-bold text-brand-blue-dark">Tipo</label>
-          <select name="tipo" required className="mt-1 w-full rounded-lg border border-black/10 px-3 py-2">
+          <select
+            id="campo-tipo"
+            name="tipo"
+            required
+            className="mt-1 w-full rounded-lg border border-black/10 px-3 py-2"
+          >
             <option value="mensualidad">Mensualidad</option>
+            <option value="tarjeta_horas">Tarjeta de horas</option>
             <option value="comida">Comida</option>
             <option value="inscripcion">Inscripción</option>
             <option value="extra">Extra</option>
@@ -56,6 +77,7 @@ export default async function PagosPage() {
         <div>
           <label className="text-sm font-bold text-brand-blue-dark">Monto (MXN)</label>
           <input
+            id="campo-monto"
             type="number"
             step="0.01"
             name="monto"
@@ -81,7 +103,11 @@ export default async function PagosPage() {
         </div>
         <div className="sm:col-span-2">
           <label className="text-sm font-bold text-brand-blue-dark">Concepto</label>
-          <input name="concepto" className="mt-1 w-full rounded-lg border border-black/10 px-3 py-2" />
+          <input
+            id="campo-concepto"
+            name="concepto"
+            className="mt-1 w-full rounded-lg border border-black/10 px-3 py-2"
+          />
         </div>
         <div>
           <label className="text-sm font-bold text-brand-blue-dark">Estatus</label>
@@ -120,7 +146,7 @@ export default async function PagosPage() {
                 <td className="px-4 py-3 font-bold">
                   {p.ninos?.nombre} {p.ninos?.apellido_paterno}
                 </td>
-                <td className="px-4 py-3 capitalize">{p.tipo}</td>
+                <td className="px-4 py-3">{TIPO_LEGIBLE[p.tipo] ?? p.tipo}</td>
                 <td className="px-4 py-3">${Number(p.monto).toLocaleString("es-MX")}</td>
                 <td className="px-4 py-3">{p.fecha_pago}</td>
                 <td className="px-4 py-3 capitalize">{p.metodo_pago || "—"}</td>
