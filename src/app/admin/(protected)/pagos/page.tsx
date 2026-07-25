@@ -5,7 +5,7 @@ import { registrarPago, eliminarPago } from "@/app/admin/actions";
 import BotonConfirmar from "@/components/admin/BotonConfirmar";
 import SelectorPlanPago from "@/components/admin/SelectorPlanPago";
 import BotonRecordatorios from "@/components/admin/BotonRecordatorios";
-import InsigniaEstatusPago from "@/components/admin/InsigniaEstatusPago";
+import InvitarWhatsApp from "@/components/admin/InvitarWhatsApp";
 import { estatusPago } from "@/lib/pagos";
 
 const TIPO_LEGIBLE: Record<string, string> = {
@@ -89,43 +89,32 @@ export default async function PagosPage() {
             pago. Configura el día de pago desde &ldquo;Editar&rdquo; en la
             ficha de cada niño/a.
           </p>
-          <div className="mt-4 space-y-2">
-            {porVencerOVencidos.map((n) => {
-              const tutorPrincipal = (n.tutores_ninos ?? []).find(
-                (tn) => tn.tutor?.telefono,
-              )?.tutor;
-              return (
-                <div
-                  key={n.id}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white/60 px-4 py-2.5"
-                >
-                  <div>
-                    <p className="font-bold text-brand-blue-dark">
-                      {n.nombre} {n.apellido_paterno}
-                    </p>
-                    <p className="text-xs text-foreground/60">
-                      {tutorPrincipal
-                        ? `${tutorPrincipal.nombre} ${tutorPrincipal.apellido_paterno} · ${tutorPrincipal.telefono}`
-                        : "Sin tutor con teléfono registrado"}
-                    </p>
-                  </div>
-                  <InsigniaEstatusPago
-                    proximaFechaPago={n.proxima_fecha_pago}
-                    hoyISO={hoy}
-                  />
-                </div>
-              );
-            })}
-          </div>
           <div className="mt-4">
-            <BotonRecordatorios />
+            <BotonRecordatorios
+              ninos={porVencerOVencidos.map((n) => {
+                const tutorPrincipal = (n.tutores_ninos ?? []).find(
+                  (tn) => tn.tutor?.telefono,
+                )?.tutor;
+                return {
+                  id: n.id,
+                  nombre: `${n.nombre} ${n.apellido_paterno}`,
+                  proximaFechaPago: n.proxima_fecha_pago,
+                  tutorNombre: tutorPrincipal
+                    ? `${tutorPrincipal.nombre} ${tutorPrincipal.apellido_paterno}`
+                    : null,
+                  tutorTelefono: tutorPrincipal?.telefono ?? null,
+                };
+              })}
+              hoyISO={hoy}
+            />
             <p className="mt-2 text-xs text-foreground/50">
-              Envía un WhatsApp al tutor principal de cada niño/a de la
-              lista. Requiere tener configurado Twilio (ver
-              src/lib/whatsapp.ts) — mientras tanto usa esta lista para
-              avisar por tu cuenta.
+              Marca a quién sí avisar y a quién no, y envía un WhatsApp al
+              tutor principal de cada niño/a seleccionado. Requiere tener
+              configurado Twilio (ver src/lib/whatsapp.ts).
             </p>
           </div>
+
+          <InvitarWhatsApp numeroSandbox="+14155238886" />
         </div>
       )}
 

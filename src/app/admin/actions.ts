@@ -497,9 +497,16 @@ type NinoParaRecordatorio = {
   }[];
 };
 
-export async function enviarRecordatoriosPago() {
+/** Manda recordatorios. Si se pasa `formData` con uno o más `nino_id`
+ * (checkboxes marcados a mano en el panel de Pagos), solo se manda a esos.
+ * Sin `formData` (por ejemplo desde la tarea programada) se manda a todos
+ * los que estén "por vencer" o "vencidos". */
+export async function enviarRecordatoriosPago(formData?: FormData) {
   const supabase = await createClient();
   const hoy = fechaHoyCancun();
+  const seleccionIds = formData
+    ? formData.getAll("nino_id").map(String)
+    : null;
 
   const { data } = await supabase
     .from("ninos")
@@ -515,6 +522,8 @@ export async function enviarRecordatoriosPago() {
   let omitidos = 0;
 
   for (const nino of ninos) {
+    if (seleccionIds && !seleccionIds.includes(nino.id)) continue;
+
     const estatus = estatusPago(nino.proxima_fecha_pago, hoy, 3);
     if (estatus !== "por_vencer" && estatus !== "vencido") continue;
 
