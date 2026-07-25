@@ -84,14 +84,14 @@ function NinoCard({ n, hoy }: { n: Nino; hoy: string }) {
             telefono: tn.tutor!.telefono,
           }))}
           personasAutorizadas={n.personas_autorizadas ?? []}
-          className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-green/10 text-brand-green-dark"
+          className="flex h-16 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-green/10 text-brand-green-dark"
         >
           {n.foto_url ? (
             <Image
               src={n.foto_url}
               alt={n.nombre}
-              width={56}
-              height={56}
+              width={48}
+              height={64}
               className="h-full w-full object-cover"
             />
           ) : (

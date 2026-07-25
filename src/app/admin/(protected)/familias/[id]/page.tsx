@@ -179,14 +179,14 @@ export default async function FamiliaDetallePage({
                     },
                   ]}
                   personasAutorizadas={tn.nino.personas_autorizadas ?? []}
-                  className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-green/10 text-brand-green-dark"
+                  className="flex h-16 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-green/10 text-brand-green-dark"
                 >
                   {tn.nino.foto_url ? (
                     <Image
                       src={tn.nino.foto_url}
                       alt={tn.nino.nombre}
-                      width={56}
-                      height={56}
+                      width={48}
+                      height={64}
                       className="h-full w-full object-cover"
                     />
                   ) : (

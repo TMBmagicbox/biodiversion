@@ -35,8 +35,9 @@ function insigniaPlan(plan: { nombre: string; tipo: string } | null) {
 }
 
 /** Ficha rápida para identificar a un niño/a al momento de la salida: foto
- * a toda la altura de la pantalla (30% del ancho) y, junto a ella, sus
- * datos, plan y quién está autorizado a recogerlo. */
+ * a toda la altura de la pantalla (38% del ancho, alineada a la izquierda)
+ * y, junto a ella en un panel de cristal opaco, sus datos, plan y quién
+ * está autorizado a recogerlo. */
 export default function FichaIdentificacion({
   fotoUrl,
   nombreCompleto,
@@ -71,20 +72,20 @@ export default function FichaIdentificacion({
 
       {abierta && (
         <div
-          className="fixed inset-0 z-[100] bg-black/80"
+          className="fixed inset-0 z-[100] bg-gradient-to-br from-brand-blue-dark/80 via-black/70 to-brand-green-dark/70 p-3 sm:p-6"
           onClick={() => setAbierta(false)}
         >
           <button
             type="button"
             onClick={() => setAbierta(false)}
             aria-label="Cerrar"
-            className="absolute right-4 top-4 z-10 rounded-full bg-white/15 p-2 text-white backdrop-blur transition-colors hover:bg-white/25"
+            className="absolute right-5 top-5 z-10 rounded-full bg-white/15 p-2 text-white backdrop-blur transition-colors hover:bg-white/25"
           >
             <X className="h-6 w-6" />
           </button>
 
           <div
-            className="mx-auto flex h-full w-full max-w-5xl flex-col sm:flex-row"
+            className="mx-auto flex h-full w-full max-w-5xl flex-col overflow-hidden rounded-3xl shadow-2xl sm:flex-row"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative h-56 w-full shrink-0 bg-black sm:h-full sm:w-[38%]">
@@ -103,7 +104,7 @@ export default function FichaIdentificacion({
               )}
             </div>
 
-            <div className="flex-1 overflow-y-auto bg-white p-6 sm:p-8">
+            <div className="glass-strong flex-1 overflow-y-auto p-6 sm:p-8">
               <h2 className="text-2xl font-black text-brand-blue-dark">
                 {nombreCompleto}
               </h2>
