@@ -12,6 +12,7 @@ import {
 } from "@/app/admin/actions";
 import FotoLightbox from "@/components/admin/FotoLightbox";
 import FichaIdentificacion from "@/components/admin/FichaIdentificacion";
+import InsigniaEstatusPago from "@/components/admin/InsigniaEstatusPago";
 import BotonConfirmar from "@/components/admin/BotonConfirmar";
 import FotoInput from "@/components/admin/FotoInput";
 import type { Plan } from "@/components/admin/SelectorPlanPago";
@@ -185,18 +186,18 @@ export default async function FamiliaDetallePage({
                     },
                   ]}
                   personasAutorizadas={tn.nino.personas_autorizadas ?? []}
-                  className="flex h-24 w-[4.5rem] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-green/10 text-brand-green-dark"
+                  className="flex h-48 w-36 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-green/10 text-brand-green-dark"
                 >
                   {tn.nino.foto_url ? (
                     <Image
                       src={tn.nino.foto_url}
                       alt={tn.nino.nombre}
-                      width={72}
-                      height={96}
+                      width={144}
+                      height={192}
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <Baby className="h-9 w-9" strokeWidth={2} />
+                    <Baby className="h-14 w-14" strokeWidth={2} />
                   )}
                 </FichaIdentificacion>
                 <div className="flex-1">
@@ -227,8 +228,14 @@ export default async function FamiliaDetallePage({
                   <p className="text-xs text-foreground/60">
                     {edad(tn.nino.fecha_nacimiento)} · {tn.parentesco}
                   </p>
-                  <div className="mt-1">
+                  <div className="mt-1 flex flex-wrap gap-1.5">
                     {insigniaPlan(tn.nino.plan ?? null)}
+                    {tn.nino.proxima_fecha_pago && (
+                      <InsigniaEstatusPago
+                        proximaFechaPago={tn.nino.proxima_fecha_pago}
+                        hoyISO={hoy}
+                      />
+                    )}
                   </div>
                   {tn.nino.salon && (
                     <p className="text-xs text-foreground/60">

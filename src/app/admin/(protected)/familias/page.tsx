@@ -72,7 +72,7 @@ function NinoCard({ n, hoy }: { n: Nino; hoy: string }) {
 
   return (
     <div className="glass rounded-2xl p-4">
-      <div className="flex items-center gap-3">
+      <div className="flex items-start gap-3">
         <FichaIdentificacion
           fotoUrl={n.foto_url}
           nombreCompleto={`${n.nombre} ${n.apellido_paterno}`}
@@ -86,18 +86,18 @@ function NinoCard({ n, hoy }: { n: Nino; hoy: string }) {
             telefono: tn.tutor!.telefono,
           }))}
           personasAutorizadas={n.personas_autorizadas ?? []}
-          className="flex h-24 w-[4.5rem] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-green/10 text-brand-green-dark"
+          className="flex h-48 w-36 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-green/10 text-brand-green-dark"
         >
           {n.foto_url ? (
             <Image
               src={n.foto_url}
               alt={n.nombre}
-              width={72}
-              height={96}
+              width={144}
+              height={192}
               className="h-full w-full object-cover"
             />
           ) : (
-            <Baby className="h-9 w-9" strokeWidth={2} />
+            <Baby className="h-14 w-14" strokeWidth={2} />
           )}
         </FichaIdentificacion>
         <div className="min-w-0 flex-1">
@@ -108,40 +108,40 @@ function NinoCard({ n, hoy }: { n: Nino; hoy: string }) {
             {edad(n.fecha_nacimiento)}
             {n.salon ? ` · ${n.salon}` : ""}
           </p>
+
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {insigniaPlan(n.plan ?? null)}
+            {n.proxima_fecha_pago && (
+              <InsigniaEstatusPago
+                proximaFechaPago={n.proxima_fecha_pago}
+                hoyISO={hoy}
+              />
+            )}
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {tutores.length ? (
+              tutores.map((tn) => (
+                <Link
+                  key={tn.tutor!.id}
+                  href={`/admin/familias/${tn.tutor!.id}`}
+                  className="rounded-full bg-white/70 px-2.5 py-1 text-xs font-bold text-brand-blue-dark hover:bg-white"
+                >
+                  {tn.tutor!.nombre} {tn.tutor!.apellido_paterno}
+                  {tn.parentesco ? ` · ${tn.parentesco}` : ""}
+                </Link>
+              ))
+            ) : (
+              <Link
+                href={`/admin/familias/ninos/${n.id}/agregar-tutor`}
+                className="flex items-center gap-1 rounded-full bg-brand-blue px-2.5 py-1 text-xs font-extrabold text-white hover:bg-brand-blue-dark"
+              >
+                <UserPlus className="h-3 w-3" />
+                Agregar tutor
+              </Link>
+            )}
+          </div>
         </div>
-      </div>
-
-      <div className="mt-2 flex flex-wrap gap-1.5">
-        {insigniaPlan(n.plan ?? null)}
-        {n.proxima_fecha_pago && (
-          <InsigniaEstatusPago
-            proximaFechaPago={n.proxima_fecha_pago}
-            hoyISO={hoy}
-          />
-        )}
-      </div>
-
-      <div className="mt-3 flex flex-wrap gap-1.5">
-        {tutores.length ? (
-          tutores.map((tn) => (
-            <Link
-              key={tn.tutor!.id}
-              href={`/admin/familias/${tn.tutor!.id}`}
-              className="rounded-full bg-white/70 px-2.5 py-1 text-xs font-bold text-brand-blue-dark hover:bg-white"
-            >
-              {tn.tutor!.nombre} {tn.tutor!.apellido_paterno}
-              {tn.parentesco ? ` · ${tn.parentesco}` : ""}
-            </Link>
-          ))
-        ) : (
-          <Link
-            href={`/admin/familias/ninos/${n.id}/agregar-tutor`}
-            className="flex items-center gap-1 rounded-full bg-brand-blue px-2.5 py-1 text-xs font-extrabold text-white hover:bg-brand-blue-dark"
-          >
-            <UserPlus className="h-3 w-3" />
-            Agregar tutor
-          </Link>
-        )}
       </div>
     </div>
   );
