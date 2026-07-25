@@ -520,6 +520,7 @@ export async function enviarRecordatoriosPago(formData?: FormData) {
   let enviados = 0;
   let fallidos = 0;
   let omitidos = 0;
+  let ultimoError: string | null = null;
 
   for (const nino of ninos) {
     if (seleccionIds && !seleccionIds.includes(nino.id)) continue;
@@ -547,12 +548,24 @@ export async function enviarRecordatoriosPago(formData?: FormData) {
         : `Hola ${tutorPrincipal.nombre}, te recordamos que el pago de ${nombreNino} vence el ${nino.proxima_fecha_pago}. — Biodiversión`;
 
     const resultado = await enviarWhatsApp(tutorPrincipal.telefono, mensaje);
-    if (resultado.ok) enviados++;
-    else fallidos++;
+    if (resultado.ok) {
+      enviados++;
+    } else {
+      fallidos++;
+      if (resultado.error) {
+        // El error de Twilio viene como JSON con un campo "message" legible.
+        try {
+          const parsed = JSON.parse(resultado.error);
+          ultimoError = parsed.message ?? resultado.error;
+        } catch {
+          ultimoError = resultado.error;
+        }
+      }
+    }
   }
 
   revalidatePath("/admin/pagos");
-  return { enviados, fallidos, omitidos };
+  return { enviados, fallidos, omitidos, ultimoError };
 }
 
 // ---------- Usuarios del personal (panel admin) ----------

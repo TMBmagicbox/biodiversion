@@ -17,6 +17,7 @@ type Estado = {
   enviados: number;
   fallidos: number;
   omitidos: number;
+  ultimoError?: string | null;
   listo: boolean;
 };
 
@@ -24,6 +25,7 @@ const estadoInicial: Estado = {
   enviados: 0,
   fallidos: 0,
   omitidos: 0,
+  ultimoError: null,
   listo: false,
 };
 
@@ -122,12 +124,20 @@ export default function BotonRecordatorios({
       </button>
 
       {estado.listo && (
-        <p className="mt-2 text-xs text-foreground/60">
-          Enviados: {estado.enviados} · Sin tutor con teléfono:{" "}
-          {estado.omitidos}
-          {estado.fallidos > 0 &&
-            ` · Fallidos: ${estado.fallidos} (revisa que el número haya mandado "join" al Sandbox, o que WhatsApp esté bien configurado)`}
-        </p>
+        <div className="mt-2 text-xs text-foreground/60">
+          <p>
+            Enviados: {estado.enviados} · Sin tutor con teléfono:{" "}
+            {estado.omitidos}
+            {estado.fallidos > 0 && ` · Fallidos: ${estado.fallidos}`}
+          </p>
+          {estado.fallidos > 0 && (
+            <p className="mt-1 font-bold text-red-600">
+              {estado.ultimoError
+                ? `Motivo: ${estado.ultimoError}`
+                : 'Revisa que el número haya mandado "join" al Sandbox, o que WhatsApp esté bien configurado.'}
+            </p>
+          )}
+        </div>
       )}
     </form>
   );
