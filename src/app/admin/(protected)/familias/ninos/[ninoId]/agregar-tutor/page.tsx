@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { crearTutorParaNino } from "@/app/admin/actions";
+import FotoInput from "@/components/admin/FotoInput";
 
 export default async function AgregarTutorPage({
   params,
@@ -62,16 +63,8 @@ export default async function AgregarTutorPage({
           name="parentesco"
           placeholder="Mamá, papá, etc."
         />
-        <div>
-          <label className="text-sm font-bold text-brand-blue-dark">
-            Foto del tutor
-          </label>
-          <input
-            type="file"
-            name="tutor_foto"
-            accept="image/*"
-            className="mt-1 w-full rounded-lg border border-black/10 bg-white/70 px-3 py-2 text-sm"
-          />
+        <div className="sm:col-span-2">
+          <FotoInput name="tutor_foto" label="Foto del tutor (tipo credencial)" />
         </div>
         <div className="flex items-end gap-3 sm:col-span-2">
           <button

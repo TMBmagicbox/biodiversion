@@ -5,11 +5,14 @@ import { ArrowLeft, User, Baby, Pencil, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import {
   agregarNinoAFamilia,
+  agregarPersonaAutorizada,
   eliminarFamilia,
   eliminarNino,
+  eliminarPersonaAutorizada,
 } from "@/app/admin/actions";
 import FotoLightbox from "@/components/admin/FotoLightbox";
 import BotonConfirmar from "@/components/admin/BotonConfirmar";
+import FotoInput from "@/components/admin/FotoInput";
 
 function edad(fechaNacimiento: string | null) {
   if (!fechaNacimiento) return "Fecha de nacimiento pendiente";
@@ -34,7 +37,7 @@ export default async function FamiliaDetallePage({
   const { data: tutor } = await supabase
     .from("tutores")
     .select(
-      "*, tutores_ninos(parentesco, nino:ninos(id, nombre, apellido_paterno, apellido_materno, fecha_nacimiento, foto_url, salon, alergias))",
+      "*, tutores_ninos(parentesco, nino:ninos(id, nombre, apellido_paterno, apellido_materno, fecha_nacimiento, foto_url, salon, alergias, personas_autorizadas(id, nombre, parentesco, telefono, identificacion)))",
     )
     .eq("id", id)
     .maybeSingle();
@@ -120,6 +123,13 @@ export default async function FamiliaDetallePage({
               foto_url: string | null;
               salon: string | null;
               alergias: string | null;
+              personas_autorizadas: {
+                id: string;
+                nombre: string;
+                parentesco: string | null;
+                telefono: string | null;
+                identificacion: string | null;
+              }[];
             } | null;
           }) =>
             tn.nino && (
@@ -181,6 +191,93 @@ export default async function FamiliaDetallePage({
                       Alergias: {tn.nino.alergias}
                     </p>
                   )}
+
+                  <details className="mt-2 rounded-lg border border-black/10 bg-white/50 p-2">
+                    <summary className="cursor-pointer text-xs font-bold text-brand-blue-dark">
+                      Personas autorizadas a recoger (
+                      {tn.nino.personas_autorizadas?.length ?? 0})
+                    </summary>
+                    <div className="mt-2 space-y-2">
+                      {tn.nino.personas_autorizadas?.map((p) => (
+                        <div
+                          key={p.id}
+                          className="flex items-center justify-between gap-2 rounded-lg bg-white/70 px-2 py-1.5 text-xs"
+                        >
+                          <div>
+                            <p className="font-bold text-brand-blue-dark">
+                              {p.nombre}
+                              {p.parentesco ? ` · ${p.parentesco}` : ""}
+                            </p>
+                            {p.telefono && (
+                              <p className="text-foreground/60">
+                                {p.telefono}
+                              </p>
+                            )}
+                          </div>
+                          <form action={eliminarPersonaAutorizada}>
+                            <input
+                              type="hidden"
+                              name="persona_id"
+                              value={p.id}
+                            />
+                            <input
+                              type="hidden"
+                              name="tutor_id"
+                              value={tutor.id}
+                            />
+                            <BotonConfirmar
+                              mensaje={`¿Quitar a ${p.nombre} de las personas autorizadas?`}
+                              className="shrink-0 text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </BotonConfirmar>
+                          </form>
+                        </div>
+                      ))}
+                      <form
+                        action={agregarPersonaAutorizada}
+                        className="grid grid-cols-2 gap-1.5"
+                      >
+                        <input
+                          type="hidden"
+                          name="nino_id"
+                          value={tn.nino.id}
+                        />
+                        <input
+                          type="hidden"
+                          name="tutor_id"
+                          value={tutor.id}
+                        />
+                        <input
+                          name="nombre"
+                          placeholder="Nombre"
+                          required
+                          className="col-span-2 rounded-lg border border-black/10 bg-white/70 px-2 py-1 text-xs"
+                        />
+                        <input
+                          name="parentesco"
+                          placeholder="Parentesco (abuela, tío...)"
+                          className="col-span-2 rounded-lg border border-black/10 bg-white/70 px-2 py-1 text-xs"
+                        />
+                        <input
+                          name="telefono"
+                          placeholder="Teléfono"
+                          className="rounded-lg border border-black/10 bg-white/70 px-2 py-1 text-xs"
+                        />
+                        <input
+                          name="identificacion"
+                          placeholder="Identificación"
+                          className="rounded-lg border border-black/10 bg-white/70 px-2 py-1 text-xs"
+                        />
+                        <button
+                          type="submit"
+                          className="col-span-2 rounded-lg bg-brand-blue px-2 py-1 text-xs font-bold text-white"
+                        >
+                          Agregar persona autorizada
+                        </button>
+                      </form>
+                    </div>
+                  </details>
                 </div>
               </div>
             ),
@@ -214,16 +311,8 @@ export default async function FamiliaDetallePage({
           name="parentesco"
           placeholder="Mamá, papá, etc."
         />
-        <div>
-          <label className="text-sm font-bold text-brand-blue-dark">
-            Foto del niño/a
-          </label>
-          <input
-            type="file"
-            name="foto"
-            accept="image/*"
-            className="mt-1 w-full rounded-lg border border-black/10 bg-white/70 px-3 py-2 text-sm"
-          />
+        <div className="sm:col-span-2">
+          <FotoInput name="foto" label="Foto del niño/a (tipo credencial)" />
         </div>
         <div className="sm:col-span-2">
           <button

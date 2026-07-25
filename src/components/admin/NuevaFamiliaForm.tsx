@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { crearFamilia } from "@/app/admin/actions";
+import FotoInput from "@/components/admin/FotoInput";
 
 export default function NuevaFamiliaForm() {
   const [hijos, setHijos] = useState([0]);
@@ -20,16 +21,8 @@ export default function NuevaFamiliaForm() {
         <Campo label="Teléfono alternativo" name="telefono_alternativo" />
         <Campo label="Correo" name="email" type="email" />
         <Campo label="Dirección" name="direccion" />
-        <div>
-          <label className="text-sm font-bold text-brand-blue-dark">
-            Foto del tutor
-          </label>
-          <input
-            type="file"
-            name="tutor_foto"
-            accept="image/*"
-            className="mt-1 w-full rounded-lg border border-black/10 bg-white/70 px-3 py-2 text-sm"
-          />
+        <div className="sm:col-span-2">
+          <FotoInput name="tutor_foto" label="Foto del tutor" />
         </div>
       </fieldset>
 
@@ -56,16 +49,8 @@ export default function NuevaFamiliaForm() {
               name="nino_parentesco"
               placeholder="Mamá, papá, etc."
             />
-            <div>
-              <label className="text-sm font-bold text-brand-blue-dark">
-                Foto del niño/a
-              </label>
-              <input
-                type="file"
-                name="nino_foto"
-                accept="image/*"
-                className="mt-1 w-full rounded-lg border border-black/10 bg-white/70 px-3 py-2 text-sm"
-              />
+            <div className="sm:col-span-2">
+              <FotoInput name="nino_foto" label="Foto del niño/a" />
             </div>
             {hijos.length > 1 && (
               <button

@@ -300,6 +300,44 @@ export async function eliminarNino(formData: FormData) {
   redirect(`/admin/familias/${tutorId}`);
 }
 
+/** Agrega una persona autorizada a recoger a un niño/a, además de sus
+ * tutores (por ejemplo la abuela, un tío, o alguien de confianza). */
+export async function agregarPersonaAutorizada(formData: FormData) {
+  const supabase = await createClient();
+  const ninoId = String(formData.get("nino_id"));
+  const tutorId = String(formData.get("tutor_id"));
+
+  const { error } = await supabase.from("personas_autorizadas").insert({
+    nino_id: ninoId,
+    nombre: formData.get("nombre"),
+    parentesco: formData.get("parentesco") || null,
+    telefono: formData.get("telefono") || null,
+    identificacion: formData.get("identificacion") || null,
+  });
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath(`/admin/familias/${tutorId}`);
+  redirect(`/admin/familias/${tutorId}`);
+}
+
+/** Quita a una persona autorizada a recoger. */
+export async function eliminarPersonaAutorizada(formData: FormData) {
+  const supabase = await createClient();
+  const personaId = String(formData.get("persona_id"));
+  const tutorId = String(formData.get("tutor_id"));
+
+  const { error } = await supabase
+    .from("personas_autorizadas")
+    .delete()
+    .eq("id", personaId);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath(`/admin/familias/${tutorId}`);
+  redirect(`/admin/familias/${tutorId}`);
+}
+
 // ---------- Asistencia ----------
 export async function registrarEntrada(formData: FormData) {
   const supabase = await createClient();

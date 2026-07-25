@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { actualizarTutor } from "@/app/admin/actions";
+import FotoInput from "@/components/admin/FotoInput";
 
 export default async function EditarTutorPage({
   params,
@@ -80,14 +81,10 @@ export default async function EditarTutorPage({
           />
         </div>
         <div className="sm:col-span-2">
-          <label className="text-sm font-bold text-brand-blue-dark">
-            Nueva foto (opcional, reemplaza la actual)
-          </label>
-          <input
-            type="file"
+          <FotoInput
             name="foto"
-            accept="image/*"
-            className="mt-1 w-full rounded-lg border border-black/10 bg-white/70 px-3 py-2 text-sm"
+            label="Foto del tutor (tipo credencial)"
+            fotoActualUrl={tutor.foto_url}
           />
         </div>
         <div className="flex items-end gap-3 sm:col-span-2">
