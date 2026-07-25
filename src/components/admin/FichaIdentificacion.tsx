@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { X, Baby, Phone } from "lucide-react";
+import InsigniaEstatusPago from "@/components/admin/InsigniaEstatusPago";
 
 type Persona = {
   nombre: string;
@@ -35,14 +36,16 @@ function insigniaPlan(plan: { nombre: string; tipo: string } | null) {
 }
 
 /** Ficha rápida para identificar a un niño/a al momento de la salida: foto
- * a toda la altura de la pantalla (38% del ancho, alineada a la izquierda)
- * y, junto a ella en un panel de cristal opaco, sus datos, plan y quién
- * está autorizado a recogerlo. */
+ * a media altura de ventana (50% del ancho, alineada a la izquierda) y,
+ * junto a ella en un panel de cristal opaco, sus datos, plan, estatus de
+ * pago y quién está autorizado a recogerlo. */
 export default function FichaIdentificacion({
   fotoUrl,
   nombreCompleto,
   salon,
   plan,
+  proximaFechaPago,
+  hoyISO,
   tutores,
   personasAutorizadas,
   className,
@@ -52,6 +55,8 @@ export default function FichaIdentificacion({
   nombreCompleto: string;
   salon?: string | null;
   plan?: { nombre: string; tipo: string } | null;
+  proximaFechaPago?: string | null;
+  hoyISO?: string;
   tutores: Persona[];
   personasAutorizadas?: Persona[];
   className?: string;
@@ -72,7 +77,7 @@ export default function FichaIdentificacion({
 
       {abierta && (
         <div
-          className="fixed inset-0 z-[100] bg-gradient-to-br from-brand-blue-dark/80 via-black/70 to-brand-green-dark/70 p-3 sm:p-6"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-gradient-to-br from-brand-blue-dark/80 via-black/70 to-brand-green-dark/70 p-3 sm:p-6"
           onClick={() => setAbierta(false)}
         >
           <button
@@ -85,16 +90,16 @@ export default function FichaIdentificacion({
           </button>
 
           <div
-            className="mx-auto flex h-full w-full max-w-5xl flex-col overflow-hidden rounded-3xl shadow-2xl sm:flex-row"
+            className="mx-auto flex h-[85vh] max-h-[520px] w-full max-w-3xl flex-col overflow-hidden rounded-3xl shadow-2xl sm:h-[60vh] sm:flex-row"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="relative h-56 w-full shrink-0 bg-black sm:h-full sm:w-[38%]">
+            <div className="relative h-40 w-full shrink-0 bg-black sm:h-full sm:w-1/2">
               {fotoUrl ? (
                 <Image
                   src={fotoUrl}
                   alt={nombreCompleto}
                   fill
-                  sizes="(min-width: 640px) 38vw, 100vw"
+                  sizes="(min-width: 640px) 50vw, 100vw"
                   className="object-cover"
                 />
               ) : (
@@ -113,7 +118,15 @@ export default function FichaIdentificacion({
                   Salón: {salon}
                 </p>
               )}
-              <div className="mt-3">{insigniaPlan(plan ?? null)}</div>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {insigniaPlan(plan ?? null)}
+                {hoyISO && (
+                  <InsigniaEstatusPago
+                    proximaFechaPago={proximaFechaPago ?? null}
+                    hoyISO={hoyISO}
+                  />
+                )}
+              </div>
 
               <h3 className="mt-6 text-xs font-extrabold uppercase tracking-wide text-foreground/50">
                 Tutor(es)

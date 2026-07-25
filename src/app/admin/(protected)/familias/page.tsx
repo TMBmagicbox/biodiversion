@@ -78,6 +78,8 @@ function NinoCard({ n, hoy }: { n: Nino; hoy: string }) {
           nombreCompleto={`${n.nombre} ${n.apellido_paterno}`}
           salon={n.salon}
           plan={n.plan}
+          proximaFechaPago={n.proxima_fecha_pago}
+          hoyISO={hoy}
           tutores={tutores.map((tn) => ({
             nombre: `${tn.tutor!.nombre} ${tn.tutor!.apellido_paterno}`,
             parentesco: tn.parentesco,
