@@ -12,6 +12,7 @@ import {
   CreditCard,
   UserCog,
   ImageIcon,
+  Newspaper,
   LogOut,
   Menu,
   X,
@@ -22,6 +23,7 @@ const items = [
   { href: "/admin/familias", label: "Familias", Icon: Users },
   { href: "/admin/asistencia", label: "Asistencia / Horas", Icon: Clock3 },
   { href: "/admin/pagos", label: "Pagos", Icon: CreditCard },
+  { href: "/admin/blog", label: "Blog / Redes sociales", Icon: Newspaper },
   { href: "/admin/inicio", label: "Banner de inicio", Icon: ImageIcon },
   { href: "/admin/usuarios", label: "Usuarios del personal", Icon: UserCog },
 ];

@@ -7,6 +7,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { subirFoto } from "@/lib/supabase/storage";
 import { siguienteFechaPago, estatusPago } from "@/lib/pagos";
 import { enviarWhatsApp } from "@/lib/whatsapp";
+import { publicarEnFacebook } from "@/lib/redes-sociales/facebook";
+import { publicarEnInstagram } from "@/lib/redes-sociales/instagram";
+import { publicarEnGoogle } from "@/lib/redes-sociales/google";
+import { publicarEnTiktok } from "@/lib/redes-sociales/tiktok";
 
 export async function cerrarSesion() {
   const supabase = await createClient();
@@ -756,4 +760,109 @@ export async function alternarHeroSlide(formData: FormData) {
 
   revalidatePath("/admin/inicio");
   revalidatePath("/");
+}
+
+// ---------- Blog / redes sociales ----------
+
+/** Intenta publicar en cada red seleccionada y regresa el resultado de
+ * cada una (ok, o el motivo del error — incluyendo "no está conectada
+ * todavía" mientras no se configuren sus credenciales). */
+async function publicarEnRedesSeleccionadas(
+  redes: string[],
+  mensaje: string,
+  imagenUrl: string | null,
+) {
+  const resultado: Record<string, { ok: boolean; error?: string }> = {};
+  if (redes.includes("facebook")) {
+    resultado.facebook = await publicarEnFacebook(mensaje, imagenUrl);
+  }
+  if (redes.includes("instagram")) {
+    resultado.instagram = await publicarEnInstagram(mensaje, imagenUrl);
+  }
+  if (redes.includes("google")) {
+    resultado.google = await publicarEnGoogle(mensaje, imagenUrl);
+  }
+  if (redes.includes("tiktok")) {
+    resultado.tiktok = await publicarEnTiktok(mensaje, imagenUrl);
+  }
+  return resultado;
+}
+
+export async function crearPublicacion(formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const titulo = String(formData.get("titulo") || "");
+  const contenido = String(formData.get("contenido") || "");
+  const estado = String(formData.get("estado") || "borrador");
+  const redesSeleccionadas = formData.getAll("redes").map(String);
+  const imagenUrl = await subirFoto(supabase, formData.get("imagen"), "blog");
+
+  let redesResultado: Record<string, { ok: boolean; error?: string }> = {};
+  if (estado === "publicado" && redesSeleccionadas.length) {
+    redesResultado = await publicarEnRedesSeleccionadas(
+      redesSeleccionadas,
+      `${titulo}\n\n${contenido}`,
+      imagenUrl,
+    );
+  }
+
+  const { error } = await supabase.from("blog_posts").insert({
+    titulo,
+    contenido,
+    imagen_url: imagenUrl,
+    estado,
+    redes_seleccionadas: redesSeleccionadas,
+    redes_resultado: redesResultado,
+    creado_por: user?.id ?? null,
+    publicado_en: estado === "publicado" ? new Date().toISOString() : null,
+  });
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/blog");
+}
+
+export async function eliminarPublicacion(formData: FormData) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("blog_posts")
+    .delete()
+    .eq("id", formData.get("post_id"));
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/blog");
+}
+
+/** Reintenta publicar en las redes que tenía seleccionadas — útil cuando
+ * se acaba de conectar una red nueva, o cuando falló la primera vez. */
+export async function reintentarPublicacion(formData: FormData) {
+  const supabase = await createClient();
+  const postId = String(formData.get("post_id"));
+
+  const { data: post } = await supabase
+    .from("blog_posts")
+    .select("titulo, contenido, imagen_url, redes_seleccionadas")
+    .eq("id", postId)
+    .maybeSingle();
+  if (!post) throw new Error("Publicación no encontrada.");
+
+  const redesResultado = await publicarEnRedesSeleccionadas(
+    post.redes_seleccionadas ?? [],
+    `${post.titulo}\n\n${post.contenido}`,
+    post.imagen_url,
+  );
+
+  const { error } = await supabase
+    .from("blog_posts")
+    .update({
+      redes_resultado: redesResultado,
+      estado: "publicado",
+      publicado_en: new Date().toISOString(),
+    })
+    .eq("id", postId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/blog");
 }
