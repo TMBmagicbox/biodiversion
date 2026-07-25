@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { registrarEntrada, registrarSalida } from "@/app/admin/actions";
+import ContadorTiempo from "@/components/admin/ContadorTiempo";
 
 function formatHora(iso: string | null) {
   if (!iso) return "—";
@@ -101,7 +102,7 @@ export default async function AsistenciaPage() {
               <th className="px-4 py-3">Niño</th>
               <th className="px-4 py-3">Entrada</th>
               <th className="px-4 py-3">Salida</th>
-              <th className="px-4 py-3">Horas</th>
+              <th className="px-4 py-3">Tiempo</th>
               <th className="px-4 py-3">Recoger / acción</th>
             </tr>
           </thead>
@@ -114,7 +115,23 @@ export default async function AsistenciaPage() {
                 <td className="px-4 py-3">{formatHora(r.hora_entrada)}</td>
                 <td className="px-4 py-3">{formatHora(r.hora_salida)}</td>
                 <td className="px-4 py-3">
-                  {r.horas_totales ? `${r.horas_totales} h` : "En curso"}
+                  {r.hora_salida ? (
+                    <div>
+                      <div className="font-bold text-brand-blue-dark">
+                        {r.horas_cobradas} h cobradas
+                      </div>
+                      <div className="text-xs text-foreground/50">
+                        {r.horas_totales} h reales
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <ContadorTiempo horaEntradaISO={r.hora_entrada} />
+                      <div className="text-xs text-foreground/50">
+                        en curso
+                      </div>
+                    </div>
+                  )}
                 </td>
                 <td className="px-4 py-3">
                   {r.hora_salida ? (
@@ -158,6 +175,11 @@ export default async function AsistenciaPage() {
           </tbody>
         </table>
       </div>
+      <p className="mt-3 text-xs text-foreground/50">
+        * Las &ldquo;horas cobradas&rdquo; se redondean: a partir del minuto
+        21 de una fracción de hora, se cuenta como hora completa (ej. 1h
+        20min = 1h cobrada, 1h 21min = 2h cobradas).
+      </p>
     </div>
   );
 }

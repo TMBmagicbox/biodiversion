@@ -200,7 +200,12 @@ export async function registrarPago(formData: FormData) {
 // ---------- Usuarios del personal (panel admin) ----------
 
 /** Si el usuario que inició sesión no tiene fila en perfiles_admin, se la crea
- *  automáticamente como "admin" (bootstrap de la primera cuenta). */
+ *  automáticamente como "admin" (bootstrap de la primera cuenta).
+ *
+ *  Nota: la tabla perfiles_admin solo tiene política de RLS de lectura
+ *  ("staff_read_perfiles"), a propósito, para que el personal no pueda
+ *  escribirse a sí mismo un rol distinto. Por eso aquí usamos el cliente
+ *  de administrador (service role) únicamente para este autochequeo. */
 export async function asegurarPerfilPropio() {
   const supabase = await createClient();
   const {
@@ -216,17 +221,29 @@ export async function asegurarPerfilPropio() {
 
   if (existente) return existente;
 
-  const { data: creado } = await supabase
-    .from("perfiles_admin")
-    .insert({
-      id: user.id,
-      nombre: user.email?.split("@")[0] ?? "Administrador",
-      rol: "admin",
-    })
-    .select("id, nombre, rol")
-    .single();
+  try {
+    const admin = createAdminClient();
+    const { data: creado, error } = await admin
+      .from("perfiles_admin")
+      .insert({
+        id: user.id,
+        nombre: user.email?.split("@")[0] ?? "Administrador",
+        rol: "admin",
+      })
+      .select("id, nombre, rol")
+      .single();
 
-  return creado ?? null;
+    if (error) {
+      console.error("No se pudo crear el perfil propio:", error.message);
+      return null;
+    }
+    return creado ?? null;
+  } catch (err) {
+    // Si aún no está configurada SUPABASE_SERVICE_ROLE_KEY, no tumbamos el
+    // panel: solo seguimos sin perfil hasta que se configure.
+    console.error("asegurarPerfilPropio:", err);
+    return null;
+  }
 }
 
 export async function crearUsuarioPersonal(formData: FormData) {
