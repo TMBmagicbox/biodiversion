@@ -18,12 +18,27 @@ export function whatsappConfigurado() {
   return Boolean(TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN && TWILIO_WHATSAPP_FROM);
 }
 
-/** Convierte un teléfono guardado en formato local (10 dígitos, México) a
- * formato internacional E.164. Si ya viene con "+", lo deja igual. */
+/** Convierte un teléfono guardado en cualquier formato local a formato
+ * internacional E.164 para WhatsApp. Los celulares de México necesitan el
+ * "1" extra entre el "52" y los 10 dígitos (una rareza que WhatsApp sigue
+ * pidiendo aunque ya no se use para marcar) — si falta, se agrega solo. */
 export function normalizarTelefonoMX(telefono: string): string {
-  const limpio = telefono.replace(/[^\d+]/g, "");
-  if (limpio.startsWith("+")) return limpio;
-  return `+52${limpio}`;
+  const soloDigitos = telefono.replace(/\D/g, "");
+
+  if (soloDigitos.length === 10) {
+    // Numero local sin codigo de pais: 9985592883
+    return `+521${soloDigitos}`;
+  }
+  if (soloDigitos.length === 12 && soloDigitos.startsWith("52")) {
+    // Con codigo de pais pero sin el "1" de WhatsApp: 529985592883
+    return `+521${soloDigitos.slice(2)}`;
+  }
+  if (soloDigitos.length === 13 && soloDigitos.startsWith("521")) {
+    // Ya viene completo: 5219985592883
+    return `+${soloDigitos}`;
+  }
+  // Cualquier otro caso (otro país, formato raro): se manda tal cual con "+".
+  return `+${soloDigitos}`;
 }
 
 export async function enviarWhatsApp(
