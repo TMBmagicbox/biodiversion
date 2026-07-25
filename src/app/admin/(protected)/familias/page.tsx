@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { Plus, Baby, UserPlus, Clock, Users } from "lucide-react";
+import FichaIdentificacion from "@/components/admin/FichaIdentificacion";
 
 function edad(fechaNacimiento: string | null) {
   if (!fechaNacimiento) return "Fecha pendiente";
@@ -50,7 +51,17 @@ type Nino = {
   plan: { nombre: string; tipo: string } | null;
   tutores_ninos: {
     parentesco: string;
-    tutor: { id: string; nombre: string; apellido_paterno: string } | null;
+    tutor: {
+      id: string;
+      nombre: string;
+      apellido_paterno: string;
+      telefono: string | null;
+    } | null;
+  }[];
+  personas_autorizadas: {
+    nombre: string;
+    parentesco: string | null;
+    telefono: string | null;
   }[];
 };
 
@@ -60,7 +71,19 @@ function NinoCard({ n }: { n: Nino }) {
   return (
     <div className="glass rounded-2xl p-4">
       <div className="flex items-center gap-3">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-green/10 text-brand-green-dark">
+        <FichaIdentificacion
+          fotoUrl={n.foto_url}
+          nombreCompleto={`${n.nombre} ${n.apellido_paterno}`}
+          salon={n.salon}
+          plan={n.plan}
+          tutores={tutores.map((tn) => ({
+            nombre: `${tn.tutor!.nombre} ${tn.tutor!.apellido_paterno}`,
+            parentesco: tn.parentesco,
+            telefono: tn.tutor!.telefono,
+          }))}
+          personasAutorizadas={n.personas_autorizadas ?? []}
+          className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-green/10 text-brand-green-dark"
+        >
           {n.foto_url ? (
             <Image
               src={n.foto_url}
@@ -72,7 +95,7 @@ function NinoCard({ n }: { n: Nino }) {
           ) : (
             <Baby className="h-7 w-7" strokeWidth={2} />
           )}
-        </div>
+        </FichaIdentificacion>
         <div className="min-w-0 flex-1">
           <p className="truncate font-extrabold text-brand-blue-dark">
             {n.nombre} {n.apellido_paterno}
@@ -117,7 +140,7 @@ export default async function FamiliasPage() {
   const { data: ninos } = await supabase
     .from("ninos")
     .select(
-      "id, nombre, apellido_paterno, apellido_materno, fecha_nacimiento, foto_url, salon, plan:planes(nombre, tipo), tutores_ninos(parentesco, tutor:tutores(id, nombre, apellido_paterno))",
+      "id, nombre, apellido_paterno, apellido_materno, fecha_nacimiento, foto_url, salon, plan:planes(nombre, tipo), tutores_ninos(parentesco, tutor:tutores(id, nombre, apellido_paterno, telefono)), personas_autorizadas(nombre, parentesco, telefono)",
     )
     .eq("activo", true)
     .order("nombre");

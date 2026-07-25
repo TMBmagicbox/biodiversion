@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { registrarEntrada, registrarSalida } from "@/app/admin/actions";
 import ContadorTiempo from "@/components/admin/ContadorTiempo";
+import FichaIdentificacion from "@/components/admin/FichaIdentificacion";
+import { IdCard } from "lucide-react";
 
 function formatHora(iso: string | null) {
   if (!iso) return "—";
@@ -32,7 +34,9 @@ export default async function AsistenciaPage() {
     supabase.from("ninos").select("id, nombre, apellido_paterno").eq("activo", true).order("nombre"),
     supabase
       .from("asistencia_horas")
-      .select("*, ninos(nombre, apellido_paterno)")
+      .select(
+        "*, ninos(nombre, apellido_paterno, foto_url, salon, plan:planes(nombre, tipo), tutores_ninos(parentesco, tutor:tutores(nombre, apellido_paterno, telefono)), personas_autorizadas(nombre, parentesco, telefono))",
+      )
       .eq("fecha", hoy)
       .order("hora_entrada", { ascending: false }),
   ]);
@@ -110,7 +114,37 @@ export default async function AsistenciaPage() {
             {registros?.map((r) => (
               <tr key={r.id} className="border-t border-black/5">
                 <td className="px-4 py-3 font-bold">
-                  {r.ninos?.nombre} {r.ninos?.apellido_paterno}
+                  {r.ninos ? (
+                    <FichaIdentificacion
+                      fotoUrl={r.ninos.foto_url}
+                      nombreCompleto={`${r.ninos.nombre} ${r.ninos.apellido_paterno}`}
+                      salon={r.ninos.salon}
+                      plan={r.ninos.plan ?? null}
+                      tutores={(r.ninos.tutores_ninos ?? [])
+                        .filter((tn: { tutor: unknown }) => tn.tutor)
+                        .map(
+                          (tn: {
+                            parentesco: string;
+                            tutor: {
+                              nombre: string;
+                              apellido_paterno: string;
+                              telefono: string | null;
+                            };
+                          }) => ({
+                            nombre: `${tn.tutor.nombre} ${tn.tutor.apellido_paterno}`,
+                            parentesco: tn.parentesco,
+                            telefono: tn.tutor.telefono,
+                          }),
+                        )}
+                      personasAutorizadas={r.ninos.personas_autorizadas ?? []}
+                      className="flex items-center gap-1.5 text-left text-brand-blue-dark hover:underline"
+                    >
+                      <IdCard className="h-4 w-4 shrink-0" />
+                      {r.ninos.nombre} {r.ninos.apellido_paterno}
+                    </FichaIdentificacion>
+                  ) : (
+                    "—"
+                  )}
                 </td>
                 <td className="px-4 py-3">{formatHora(r.hora_entrada)}</td>
                 <td className="px-4 py-3">{formatHora(r.hora_salida)}</td>

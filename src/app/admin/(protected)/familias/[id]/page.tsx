@@ -11,6 +11,7 @@ import {
   eliminarPersonaAutorizada,
 } from "@/app/admin/actions";
 import FotoLightbox from "@/components/admin/FotoLightbox";
+import FichaIdentificacion from "@/components/admin/FichaIdentificacion";
 import BotonConfirmar from "@/components/admin/BotonConfirmar";
 import FotoInput from "@/components/admin/FotoInput";
 import type { Plan } from "@/components/admin/SelectorPlanPago";
@@ -165,12 +166,22 @@ export default async function FamiliaDetallePage({
           }) =>
             tn.nino && (
               <div key={tn.nino.id} className="glass flex gap-3 rounded-2xl p-4">
-                {tn.nino.foto_url ? (
-                  <FotoLightbox
-                    src={tn.nino.foto_url}
-                    alt={tn.nino.nombre}
-                    className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-brand-green/10 text-brand-green-dark"
-                  >
+                <FichaIdentificacion
+                  fotoUrl={tn.nino.foto_url}
+                  nombreCompleto={`${tn.nino.nombre} ${tn.nino.apellido_paterno}`}
+                  salon={tn.nino.salon}
+                  plan={tn.nino.plan ?? null}
+                  tutores={[
+                    {
+                      nombre: `${tutor.nombre} ${tutor.apellido_paterno}`,
+                      parentesco: tn.parentesco,
+                      telefono: tutor.telefono,
+                    },
+                  ]}
+                  personasAutorizadas={tn.nino.personas_autorizadas ?? []}
+                  className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-green/10 text-brand-green-dark"
+                >
+                  {tn.nino.foto_url ? (
                     <Image
                       src={tn.nino.foto_url}
                       alt={tn.nino.nombre}
@@ -178,12 +189,10 @@ export default async function FamiliaDetallePage({
                       height={56}
                       className="h-full w-full object-cover"
                     />
-                  </FotoLightbox>
-                ) : (
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-green/10 text-brand-green-dark">
+                  ) : (
                     <Baby className="h-7 w-7" strokeWidth={2} />
-                  </div>
-                )}
+                  )}
+                </FichaIdentificacion>
                 <div className="flex-1">
                   <div className="flex items-start justify-between gap-2">
                     <p className="font-extrabold text-brand-blue-dark">
