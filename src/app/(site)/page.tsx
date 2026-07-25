@@ -96,7 +96,7 @@ export default async function HomePage() {
   const { data: slides } = await supabase
     .from("hero_slides")
     .select(
-      "id, titulo, descripcion, imagen_fondo_url, logo_url, texto_boton, url_boton",
+      "id, titulo, descripcion, imagen_fondo_url, imagen_decorativa_url, logo_url, texto_boton, url_boton",
     )
     .eq("activo", true)
     .order("orden", { ascending: true });

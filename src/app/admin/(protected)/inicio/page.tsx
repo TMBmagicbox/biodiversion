@@ -64,6 +64,22 @@ export default async function InicioAdminPage() {
         </div>
         <div>
           <label className="text-sm font-bold text-brand-blue-dark">
+            Imagen decorativa (PNG sin fondo, opcional — no el logo)
+          </label>
+          <input
+            type="file"
+            name="imagen_decorativa"
+            accept="image/png"
+            className="mt-1 w-full rounded-lg border border-black/10 bg-white/70 px-3 py-2 text-sm"
+          />
+          <p className="mt-1 text-xs text-foreground/50">
+            Flota sobre el fondo con su propio efecto parallax (se mueve
+            más rápido al hacer scroll) para que el banner se sienta más
+            dinámico. Ej. una ilustración o foto recortada.
+          </p>
+        </div>
+        <div>
+          <label className="text-sm font-bold text-brand-blue-dark">
             Logo (PNG sin fondo, opcional)
           </label>
           <input
@@ -114,6 +130,15 @@ export default async function InicioAdminPage() {
                   alt={s.titulo}
                   fill
                   className="object-cover"
+                />
+              )}
+              {s.imagen_decorativa_url && (
+                <Image
+                  src={s.imagen_decorativa_url}
+                  alt="decorativa"
+                  width={64}
+                  height={64}
+                  className="absolute bottom-2 right-2 h-14 w-auto drop-shadow"
                 />
               )}
               {s.logo_url && (

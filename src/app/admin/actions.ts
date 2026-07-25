@@ -711,6 +711,11 @@ export async function crearHeroSlide(formData: FormData) {
     formData.get("imagen_fondo"),
     "hero",
   );
+  const imagenDecorativaUrl = await subirFoto(
+    supabase,
+    formData.get("imagen_decorativa"),
+    "hero",
+  );
   const logoUrl = await subirFoto(supabase, formData.get("logo"), "hero");
 
   const { count } = await supabase
@@ -721,6 +726,7 @@ export async function crearHeroSlide(formData: FormData) {
     titulo: formData.get("titulo"),
     descripcion: formData.get("descripcion") || null,
     imagen_fondo_url: imagenFondoUrl,
+    imagen_decorativa_url: imagenDecorativaUrl,
     logo_url: logoUrl,
     texto_boton: formData.get("texto_boton") || "Agenda una visita",
     url_boton: formData.get("url_boton") || "#contacto",
