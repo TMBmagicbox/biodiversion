@@ -169,7 +169,10 @@ export async function crearTutorParaNino(formData: FormData) {
     .select("id")
     .single();
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("crearTutorParaNino (insertar tutor):", error.message);
+    throw new Error(error.message);
+  }
 
   const { error: errorVinculo } = await supabase.from("tutores_ninos").insert({
     tutor_id: tutor.id,
@@ -178,7 +181,10 @@ export async function crearTutorParaNino(formData: FormData) {
     contacto_principal: true,
     autorizado_recoger: true,
   });
-  if (errorVinculo) throw new Error(errorVinculo.message);
+  if (errorVinculo) {
+    console.error("crearTutorParaNino (vincular):", errorVinculo.message);
+    throw new Error(errorVinculo.message);
+  }
 
   revalidatePath("/admin/familias");
   redirect(`/admin/familias/${tutor.id}`);
