@@ -89,55 +89,56 @@ export default async function FamiliaDetallePage({
         Volver a familias
       </Link>
 
-      <div className="glass mt-4 flex items-center gap-4 rounded-2xl p-6">
+      <div className="glass mt-4 flex gap-4 rounded-2xl p-6">
         {tutor.foto_url ? (
           <FotoLightbox
             src={tutor.foto_url}
             alt={tutor.nombre}
-            className="h-16 w-16 shrink-0 overflow-hidden rounded-full bg-brand-blue/10 text-brand-blue-dark"
+            className="h-48 w-36 shrink-0 overflow-hidden rounded-xl bg-brand-blue/10 text-brand-blue-dark"
           >
             <Image
               src={tutor.foto_url}
               alt={tutor.nombre}
-              width={64}
-              height={64}
+              width={144}
+              height={192}
               className="h-full w-full object-cover"
             />
           </FotoLightbox>
         ) : (
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-blue/10 text-brand-blue-dark">
-            <User className="h-8 w-8" strokeWidth={2} />
+          <div className="flex h-48 w-36 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-blue/10 text-brand-blue-dark">
+            <User className="h-14 w-14" strokeWidth={2} />
           </div>
         )}
-        <div className="flex-1">
-          <h1 className="text-xl font-black text-brand-blue-dark">
-            {tutor.nombre} {tutor.apellido_paterno} {tutor.apellido_materno}
-          </h1>
-          <p className="text-sm text-foreground/60">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <h1 className="font-black text-brand-blue-dark">
+              {tutor.nombre} {tutor.apellido_paterno} {tutor.apellido_materno}
+            </h1>
+            <div className="flex shrink-0 items-center gap-2.5">
+              <Link
+                href={`/admin/familias/${tutor.id}/editar`}
+                aria-label="Editar familia"
+                className="text-brand-blue-dark hover:text-brand-blue"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </Link>
+              <form action={eliminarFamilia}>
+                <input type="hidden" name="tutor_id" value={tutor.id} />
+                <BotonConfirmar
+                  mensaje={`¿Borrar por completo a ${tutor.nombre} ${tutor.apellido_paterno} y a sus hijos? Esta acción no se puede deshacer.`}
+                  className="text-red-600 hover:text-red-700"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </BotonConfirmar>
+              </form>
+            </div>
+          </div>
+          <p className="text-xs text-foreground/60">
             {tutor.telefono} {tutor.email ? `· ${tutor.email}` : ""}
           </p>
           {tutor.direccion && (
-            <p className="text-sm text-foreground/60">{tutor.direccion}</p>
+            <p className="text-xs text-foreground/60">{tutor.direccion}</p>
           )}
-        </div>
-        <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
-          <Link
-            href={`/admin/familias/${tutor.id}/editar`}
-            className="flex items-center justify-center gap-1.5 rounded-full border-2 border-black/10 px-4 py-2 text-sm font-extrabold text-brand-blue-dark transition-colors hover:bg-white/60"
-          >
-            <Pencil className="h-4 w-4" />
-            Editar
-          </Link>
-          <form action={eliminarFamilia}>
-            <input type="hidden" name="tutor_id" value={tutor.id} />
-            <BotonConfirmar
-              mensaje={`¿Borrar por completo a ${tutor.nombre} ${tutor.apellido_paterno} y a sus hijos? Esta acción no se puede deshacer.`}
-              className="flex w-full items-center justify-center gap-1.5 rounded-full border-2 border-red-200 px-4 py-2 text-sm font-extrabold text-red-600 transition-colors hover:bg-red-50"
-            >
-              <Trash2 className="h-4 w-4" />
-              Borrar familia
-            </BotonConfirmar>
-          </form>
         </div>
       </div>
 
