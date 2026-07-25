@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { subirFoto } from "@/lib/supabase/storage";
+import { siguienteFechaPago, estatusPago } from "@/lib/pagos";
+import { enviarWhatsApp } from "@/lib/whatsapp";
 
 export async function cerrarSesion() {
   const supabase = await createClient();
@@ -230,6 +232,15 @@ export async function actualizarNino(formData: FormData) {
 
   const nuevaFotoUrl = await subirFoto(supabase, formData.get("foto"), "ninos");
 
+  const diaPagoRaw = formData.get("dia_pago");
+  const diaPago = diaPagoRaw ? Number(diaPagoRaw) : null;
+  const proximaFechaPagoManual = formData.get("proxima_fecha_pago");
+  const proximaFechaPago = proximaFechaPagoManual
+    ? String(proximaFechaPagoManual)
+    : diaPago
+      ? siguienteFechaPago(diaPago, fechaHoyCancun())
+      : null;
+
   const { error } = await supabase
     .from("ninos")
     .update({
@@ -246,6 +257,8 @@ export async function actualizarNino(formData: FormData) {
       pediatra_telefono: formData.get("pediatra_telefono") || null,
       vacunas_al_dia: formData.get("vacunas_al_dia") === "on",
       plan_id: formData.get("plan_id") || null,
+      dia_pago: diaPago,
+      proxima_fecha_pago: proximaFechaPago,
       ...(nuevaFotoUrl ? { foto_url: nuevaFotoUrl } : {}),
     })
     .eq("id", ninoId);
@@ -389,19 +402,42 @@ export async function registrarPago(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const ninoId = String(formData.get("nino_id"));
+  const fechaPago = String(formData.get("fecha_pago") || "") || fechaHoyCancun();
+  const estatus = String(formData.get("estatus") || "pagado");
+
   const { error } = await supabase.from("pagos").insert({
-    nino_id: formData.get("nino_id"),
+    nino_id: ninoId,
     tipo: formData.get("tipo"),
     concepto: formData.get("concepto") || null,
     monto: formData.get("monto"),
     mes_correspondiente: formData.get("mes_correspondiente") || null,
-    fecha_pago: formData.get("fecha_pago") || new Date().toISOString(),
+    fecha_pago: fechaPago,
     metodo_pago: formData.get("metodo_pago") || null,
-    estatus: formData.get("estatus") || "pagado",
+    estatus,
     registrado_por: user?.id ?? null,
   });
 
   if (error) throw new Error(error.message);
+
+  // Si el pago quedó "pagado" y el niño/a tiene un día de pago fijo,
+  // avanzamos su próxima fecha de pago un mes para el calendario/alertas.
+  if (estatus === "pagado") {
+    const { data: nino } = await supabase
+      .from("ninos")
+      .select("dia_pago")
+      .eq("id", ninoId)
+      .maybeSingle();
+    if (nino?.dia_pago) {
+      await supabase
+        .from("ninos")
+        .update({
+          proxima_fecha_pago: siguienteFechaPago(nino.dia_pago, fechaPago),
+        })
+        .eq("id", ninoId);
+    }
+  }
+
   revalidatePath("/admin/pagos");
   redirect("/admin/pagos");
 }
@@ -439,6 +475,75 @@ export async function eliminarPago(formData: FormData) {
 
   if (error) throw new Error(error.message);
   revalidatePath("/admin/pagos");
+}
+
+/** Manda un WhatsApp a los tutores de cada niño/a "por vencer" o "vencido"
+ * (según su próxima fecha de pago). Se dispara a mano desde el botón en
+ * Pagos, o desde la tarea programada de /api/cron/recordatorios-pago.
+ * Requiere tener configurado Twilio (ver src/lib/whatsapp.ts); si no está
+ * configurado, regresa fallidos sin tumbar nada. */
+type NinoParaRecordatorio = {
+  id: string;
+  nombre: string;
+  apellido_paterno: string;
+  proxima_fecha_pago: string | null;
+  tutores_ninos: {
+    contacto_principal: boolean;
+    tutor: {
+      nombre: string;
+      apellido_paterno: string;
+      telefono: string | null;
+    } | null;
+  }[];
+};
+
+export async function enviarRecordatoriosPago() {
+  const supabase = await createClient();
+  const hoy = fechaHoyCancun();
+
+  const { data } = await supabase
+    .from("ninos")
+    .select(
+      "id, nombre, apellido_paterno, proxima_fecha_pago, tutores_ninos(contacto_principal, tutor:tutores(nombre, apellido_paterno, telefono))",
+    )
+    .eq("activo", true)
+    .not("proxima_fecha_pago", "is", null);
+  const ninos = (data ?? []) as unknown as NinoParaRecordatorio[];
+
+  let enviados = 0;
+  let fallidos = 0;
+  let omitidos = 0;
+
+  for (const nino of ninos) {
+    const estatus = estatusPago(nino.proxima_fecha_pago, hoy, 3);
+    if (estatus !== "por_vencer" && estatus !== "vencido") continue;
+
+    const tutoresConTelefono = (nino.tutores_ninos ?? [])
+      .filter((tn) => tn.tutor?.telefono)
+      .sort(
+        (a, b) =>
+          Number(b.contacto_principal) - Number(a.contacto_principal),
+      );
+    const tutorPrincipal = tutoresConTelefono[0]?.tutor;
+
+    if (!tutorPrincipal?.telefono) {
+      omitidos++;
+      continue;
+    }
+
+    const nombreNino = `${nino.nombre} ${nino.apellido_paterno}`;
+    const mensaje =
+      estatus === "vencido"
+        ? `Hola ${tutorPrincipal.nombre}, te recordamos que el pago de ${nombreNino} venció el ${nino.proxima_fecha_pago}. Cualquier duda con gusto te apoyamos. — Biodiversión`
+        : `Hola ${tutorPrincipal.nombre}, te recordamos que el pago de ${nombreNino} vence el ${nino.proxima_fecha_pago}. — Biodiversión`;
+
+    const resultado = await enviarWhatsApp(tutorPrincipal.telefono, mensaje);
+    if (resultado.ok) enviados++;
+    else fallidos++;
+  }
+
+  revalidatePath("/admin/pagos");
+  return { enviados, fallidos, omitidos };
 }
 
 // ---------- Usuarios del personal (panel admin) ----------

@@ -3,6 +3,7 @@ import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { Plus, Baby, UserPlus, Clock, Users } from "lucide-react";
 import FichaIdentificacion from "@/components/admin/FichaIdentificacion";
+import InsigniaEstatusPago from "@/components/admin/InsigniaEstatusPago";
 
 function edad(fechaNacimiento: string | null) {
   if (!fechaNacimiento) return "Fecha pendiente";
@@ -49,6 +50,7 @@ type Nino = {
   foto_url: string | null;
   salon: string | null;
   plan: { nombre: string; tipo: string } | null;
+  proxima_fecha_pago: string | null;
   tutores_ninos: {
     parentesco: string;
     tutor: {
@@ -65,7 +67,7 @@ type Nino = {
   }[];
 };
 
-function NinoCard({ n }: { n: Nino }) {
+function NinoCard({ n, hoy }: { n: Nino; hoy: string }) {
   const tutores = (n.tutores_ninos ?? []).filter((tn) => tn.tutor);
 
   return (
@@ -107,7 +109,15 @@ function NinoCard({ n }: { n: Nino }) {
         </div>
       </div>
 
-      <div className="mt-2">{insigniaPlan(n.plan ?? null)}</div>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {insigniaPlan(n.plan ?? null)}
+        {n.proxima_fecha_pago && (
+          <InsigniaEstatusPago
+            proximaFechaPago={n.proxima_fecha_pago}
+            hoyISO={hoy}
+          />
+        )}
+      </div>
 
       <div className="mt-3 flex flex-wrap gap-1.5">
         {tutores.length ? (
@@ -137,10 +147,13 @@ function NinoCard({ n }: { n: Nino }) {
 
 export default async function FamiliasPage() {
   const supabase = await createClient();
+  const hoy = new Date().toLocaleDateString("en-CA", {
+    timeZone: "America/Cancun",
+  });
   const { data: ninos } = await supabase
     .from("ninos")
     .select(
-      "id, nombre, apellido_paterno, apellido_materno, fecha_nacimiento, foto_url, salon, plan:planes(nombre, tipo), tutores_ninos(parentesco, tutor:tutores(id, nombre, apellido_paterno, telefono)), personas_autorizadas(nombre, parentesco, telefono)",
+      "id, nombre, apellido_paterno, apellido_materno, fecha_nacimiento, foto_url, salon, plan:planes(nombre, tipo), proxima_fecha_pago, tutores_ninos(parentesco, tutor:tutores(id, nombre, apellido_paterno, telefono)), personas_autorizadas(nombre, parentesco, telefono)",
     )
     .eq("activo", true)
     .order("nombre");
@@ -181,7 +194,7 @@ export default async function FamiliasPage() {
       </p>
       <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {tiempoCompleto.map((n) => (
-          <NinoCard key={n.id} n={n} />
+          <NinoCard key={n.id} n={n} hoy={hoy} />
         ))}
         {!tiempoCompleto.length && (
           <p className="text-center text-foreground/50">
@@ -199,7 +212,7 @@ export default async function FamiliasPage() {
       </p>
       <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {porHoras.map((n) => (
-          <NinoCard key={n.id} n={n} />
+          <NinoCard key={n.id} n={n} hoy={hoy} />
         ))}
         {!porHoras.length && (
           <p className="text-center text-foreground/50">

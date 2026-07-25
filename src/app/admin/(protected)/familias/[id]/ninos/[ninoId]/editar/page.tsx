@@ -91,6 +91,29 @@ export default async function EditarNinoPage({
           </select>
         </div>
         <Campo
+          label="Día de pago (1-31)"
+          name="dia_pago"
+          type="number"
+          defaultValue={nino.dia_pago ? String(nino.dia_pago) : ""}
+          placeholder="Ej. 5"
+        />
+        <div>
+          <label className="text-sm font-bold text-brand-blue-dark">
+            Próxima fecha de pago
+          </label>
+          <input
+            type="date"
+            name="proxima_fecha_pago"
+            defaultValue={nino.proxima_fecha_pago ?? ""}
+            className="mt-1 w-full rounded-lg border border-black/10 bg-white/70 px-3 py-2"
+          />
+          <p className="mt-1 text-xs text-foreground/50">
+            Si dejas el día de pago y borras esta fecha, se calcula sola. Se
+            adelanta un mes automáticamente cada vez que registras un pago
+            &ldquo;pagado&rdquo; de este niño/a.
+          </p>
+        </div>
+        <Campo
           label="Tipo de sangre"
           name="tipo_sangre"
           defaultValue={nino.tipo_sangre ?? ""}

@@ -1,9 +1,12 @@
 import Link from "next/link";
-import { Download, Pencil } from "lucide-react";
+import { Download, Pencil, BellRing } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { registrarPago, eliminarPago } from "@/app/admin/actions";
 import BotonConfirmar from "@/components/admin/BotonConfirmar";
 import SelectorPlanPago from "@/components/admin/SelectorPlanPago";
+import BotonRecordatorios from "@/components/admin/BotonRecordatorios";
+import InsigniaEstatusPago from "@/components/admin/InsigniaEstatusPago";
+import { estatusPago } from "@/lib/pagos";
 
 const TIPO_LEGIBLE: Record<string, string> = {
   mensualidad: "Mensualidad",
@@ -13,22 +16,54 @@ const TIPO_LEGIBLE: Record<string, string> = {
   tarjeta_horas: "Tarjeta de horas",
 };
 
+type NinoCalendario = {
+  id: string;
+  nombre: string;
+  apellido_paterno: string;
+  proxima_fecha_pago: string | null;
+  tutores_ninos: {
+    contacto_principal: boolean;
+    tutor: {
+      nombre: string;
+      apellido_paterno: string;
+      telefono: string | null;
+    } | null;
+  }[];
+};
+
 export default async function PagosPage() {
   const supabase = await createClient();
+  const hoy = new Date().toLocaleDateString("en-CA", {
+    timeZone: "America/Cancun",
+  });
 
-  const [{ data: ninos }, { data: pagos }, { data: planes }] = await Promise.all([
-    supabase.from("ninos").select("id, nombre, apellido_paterno").eq("activo", true).order("nombre"),
-    supabase
-      .from("pagos")
-      .select("*, ninos(nombre, apellido_paterno)")
-      .order("fecha_pago", { ascending: false })
-      .limit(50),
-    supabase
-      .from("planes")
-      .select("id, nombre, tipo, monto, horas_incluidas")
-      .eq("activo", true)
-      .order("monto"),
-  ]);
+  const [{ data: ninos }, { data: pagos }, { data: planes }, { data: calendario }] =
+    await Promise.all([
+      supabase.from("ninos").select("id, nombre, apellido_paterno").eq("activo", true).order("nombre"),
+      supabase
+        .from("pagos")
+        .select("*, ninos(nombre, apellido_paterno)")
+        .order("fecha_pago", { ascending: false })
+        .limit(50),
+      supabase
+        .from("planes")
+        .select("id, nombre, tipo, monto, horas_incluidas")
+        .eq("activo", true)
+        .order("monto"),
+      supabase
+        .from("ninos")
+        .select(
+          "id, nombre, apellido_paterno, proxima_fecha_pago, tutores_ninos(contacto_principal, tutor:tutores(nombre, apellido_paterno, telefono))",
+        )
+        .eq("activo", true)
+        .not("proxima_fecha_pago", "is", null)
+        .order("proxima_fecha_pago", { ascending: true }),
+    ]);
+
+  const calendarioList = (calendario ?? []) as unknown as NinoCalendario[];
+  const porVencerOVencidos = calendarioList
+    .map((n) => ({ ...n, estatus: estatusPago(n.proxima_fecha_pago, hoy) }))
+    .filter((n) => n.estatus === "por_vencer" || n.estatus === "vencido");
 
   return (
     <div>
@@ -42,6 +77,57 @@ export default async function PagosPage() {
           Exportar a Excel
         </a>
       </div>
+
+      {porVencerOVencidos.length > 0 && (
+        <div className="glass mt-6 rounded-2xl p-6">
+          <h2 className="flex items-center gap-2 text-lg font-extrabold text-brand-blue-dark">
+            <BellRing className="h-5 w-5" />
+            Recordatorios de pago ({porVencerOVencidos.length})
+          </h2>
+          <p className="mt-1 text-sm text-foreground/60">
+            Niños por vencer (3 días o menos) o vencidos, según su día de
+            pago. Configura el día de pago desde &ldquo;Editar&rdquo; en la
+            ficha de cada niño/a.
+          </p>
+          <div className="mt-4 space-y-2">
+            {porVencerOVencidos.map((n) => {
+              const tutorPrincipal = (n.tutores_ninos ?? []).find(
+                (tn) => tn.tutor?.telefono,
+              )?.tutor;
+              return (
+                <div
+                  key={n.id}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white/60 px-4 py-2.5"
+                >
+                  <div>
+                    <p className="font-bold text-brand-blue-dark">
+                      {n.nombre} {n.apellido_paterno}
+                    </p>
+                    <p className="text-xs text-foreground/60">
+                      {tutorPrincipal
+                        ? `${tutorPrincipal.nombre} ${tutorPrincipal.apellido_paterno} · ${tutorPrincipal.telefono}`
+                        : "Sin tutor con teléfono registrado"}
+                    </p>
+                  </div>
+                  <InsigniaEstatusPago
+                    proximaFechaPago={n.proxima_fecha_pago}
+                    hoyISO={hoy}
+                  />
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-4">
+            <BotonRecordatorios />
+            <p className="mt-2 text-xs text-foreground/50">
+              Envía un WhatsApp al tutor principal de cada niño/a de la
+              lista. Requiere tener configurado Twilio (ver
+              src/lib/whatsapp.ts) — mientras tanto usa esta lista para
+              avisar por tu cuenta.
+            </p>
+          </div>
+        </div>
+      )}
 
       <form
         action={registrarPago}
