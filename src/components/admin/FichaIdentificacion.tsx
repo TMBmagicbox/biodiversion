@@ -35,10 +35,11 @@ function insigniaPlan(plan: { nombre: string; tipo: string } | null) {
   );
 }
 
-/** Ficha rápida para identificar a un niño/a al momento de la salida: foto
- * a media altura de ventana (50% del ancho, alineada a la izquierda) y,
- * junto a ella en un panel de cristal opaco, sus datos, plan, estatus de
- * pago y quién está autorizado a recogerlo. */
+/** Ficha rápida para identificar a un niño/a al momento de la salida.
+ * En celular: formato credencial vertical — la foto llena toda la tarjeta
+ * de fondo y los datos van encima, en un panel de cristal opaco pegado
+ * abajo. En pantallas más grandes: foto a la izquierda (50% del ancho) y
+ * panel de datos a la derecha. */
 export default function FichaIdentificacion({
   fotoUrl,
   nombreCompleto,
@@ -90,10 +91,12 @@ export default function FichaIdentificacion({
           </button>
 
           <div
-            className="mx-auto flex h-[85vh] max-h-[520px] w-full max-w-3xl flex-col overflow-hidden rounded-3xl shadow-2xl sm:h-[60vh] sm:flex-row"
+            className="relative mx-auto flex h-[85vh] max-h-[600px] w-full max-w-3xl flex-col overflow-hidden rounded-3xl shadow-2xl sm:h-[60vh] sm:max-h-[520px] sm:flex-row"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="relative h-40 w-full shrink-0 bg-black sm:h-full sm:w-1/2">
+            {/* Foto: en celular llena toda la tarjeta de fondo (formato
+             * credencial); desde sm ocupa el 50% izquierdo, en flujo normal. */}
+            <div className="absolute inset-0 bg-black sm:relative sm:h-full sm:w-1/2 sm:shrink-0">
               {fotoUrl ? (
                 <Image
                   src={fotoUrl}
@@ -109,7 +112,9 @@ export default function FichaIdentificacion({
               )}
             </div>
 
-            <div className="glass-strong flex-1 overflow-y-auto p-6 sm:p-8">
+            {/* Datos: en celular flotan sobre la foto, pegados abajo, con
+             * vidrio opaco; desde sm es un panel normal a la derecha. */}
+            <div className="glass-strong relative z-10 mt-auto max-h-[60%] overflow-y-auto p-6 sm:mt-0 sm:max-h-none sm:flex-1 sm:p-8">
               <h2 className="text-2xl font-black text-brand-blue-dark">
                 {nombreCompleto}
               </h2>
