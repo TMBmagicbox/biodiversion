@@ -87,13 +87,13 @@ export default function FichaIdentificacion({
             className="mx-auto flex h-full w-full max-w-5xl flex-col sm:flex-row"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="relative h-56 w-full shrink-0 bg-black sm:h-full sm:w-[30%]">
+            <div className="relative h-56 w-full shrink-0 bg-black sm:h-full sm:w-[38%]">
               {fotoUrl ? (
                 <Image
                   src={fotoUrl}
                   alt={nombreCompleto}
                   fill
-                  sizes="(min-width: 640px) 30vw, 100vw"
+                  sizes="(min-width: 640px) 38vw, 100vw"
                   className="object-cover"
                 />
               ) : (
