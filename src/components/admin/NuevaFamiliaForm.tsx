@@ -4,8 +4,9 @@ import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { crearFamilia } from "@/app/admin/actions";
 import FotoInput from "@/components/admin/FotoInput";
+import type { Plan } from "@/components/admin/SelectorPlanPago";
 
-export default function NuevaFamiliaForm() {
+export default function NuevaFamiliaForm({ planes }: { planes: Plan[] }) {
   const [hijos, setHijos] = useState([0]);
 
   return (
@@ -49,6 +50,26 @@ export default function NuevaFamiliaForm() {
               name="nino_parentesco"
               placeholder="Mamá, papá, etc."
             />
+            <div>
+              <label className="text-sm font-bold text-brand-blue-dark">
+                Plan
+              </label>
+              <select
+                name="nino_plan_id"
+                defaultValue=""
+                className="mt-1 w-full rounded-lg border border-black/10 bg-white/70 px-3 py-2"
+              >
+                <option value="">Sin asignar (definir después)</option>
+                {planes.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nombre} — ${p.monto.toLocaleString("es-MX")}
+                    {p.tipo === "tarjeta_horas"
+                      ? ` (${p.horas_incluidas} h, por horas)`
+                      : "/mes (tiempo completo)"}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="sm:col-span-2">
               <FotoInput name="nino_foto" label="Foto del niño/a" />
             </div>

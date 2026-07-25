@@ -71,6 +71,7 @@ export async function crearFamilia(formData: FormData) {
   const fechas = formData.getAll("nino_fecha_nacimiento");
   const parentescos = formData.getAll("nino_parentesco");
   const fotos = formData.getAll("nino_foto");
+  const planesIds = formData.getAll("nino_plan_id");
 
   for (let i = 0; i < nombres.length; i++) {
     const nombre = String(nombres[i] || "").trim();
@@ -87,6 +88,7 @@ export async function crearFamilia(formData: FormData) {
         apellido_materno: apellidosM[i] || null,
         fecha_nacimiento: fecha,
         foto_url: fotoNinoUrl,
+        plan_id: planesIds[i] || null,
       })
       .select("id")
       .single();
@@ -121,6 +123,7 @@ export async function agregarNinoAFamilia(formData: FormData) {
       apellido_materno: formData.get("apellido_materno") || null,
       fecha_nacimiento: formData.get("fecha_nacimiento"),
       foto_url: fotoUrl,
+      plan_id: formData.get("plan_id") || null,
     })
     .select("id")
     .single();
@@ -236,6 +239,7 @@ export async function actualizarNino(formData: FormData) {
       pediatra_nombre: formData.get("pediatra_nombre") || null,
       pediatra_telefono: formData.get("pediatra_telefono") || null,
       vacunas_al_dia: formData.get("vacunas_al_dia") === "on",
+      plan_id: formData.get("plan_id") || null,
       ...(nuevaFotoUrl ? { foto_url: nuevaFotoUrl } : {}),
     })
     .eq("id", ninoId);

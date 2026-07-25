@@ -13,6 +13,29 @@ import {
 import FotoLightbox from "@/components/admin/FotoLightbox";
 import BotonConfirmar from "@/components/admin/BotonConfirmar";
 import FotoInput from "@/components/admin/FotoInput";
+import type { Plan } from "@/components/admin/SelectorPlanPago";
+
+function insigniaPlan(plan: { nombre: string; tipo: string } | null) {
+  if (!plan) {
+    return (
+      <span className="rounded-full bg-black/5 px-2 py-0.5 text-[10px] font-bold text-foreground/50">
+        Sin plan asignado
+      </span>
+    );
+  }
+  const esPorHoras = plan.tipo === "tarjeta_horas";
+  return (
+    <span
+      className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+        esPorHoras
+          ? "bg-amber-100 text-amber-800"
+          : "bg-brand-blue/10 text-brand-blue-dark"
+      }`}
+    >
+      {esPorHoras ? `${plan.nombre} · por horas` : `${plan.nombre} · tiempo completo`}
+    </span>
+  );
+}
 
 function edad(fechaNacimiento: string | null) {
   if (!fechaNacimiento) return "Fecha de nacimiento pendiente";
@@ -34,13 +57,20 @@ export default async function FamiliaDetallePage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data: tutor } = await supabase
-    .from("tutores")
-    .select(
-      "*, tutores_ninos(parentesco, nino:ninos(id, nombre, apellido_paterno, apellido_materno, fecha_nacimiento, foto_url, salon, alergias, personas_autorizadas(id, nombre, parentesco, telefono, identificacion)))",
-    )
-    .eq("id", id)
-    .maybeSingle();
+  const [{ data: tutor }, { data: planes }] = await Promise.all([
+    supabase
+      .from("tutores")
+      .select(
+        "*, tutores_ninos(parentesco, nino:ninos(id, nombre, apellido_paterno, apellido_materno, fecha_nacimiento, foto_url, salon, alergias, plan:planes(nombre, tipo), personas_autorizadas(id, nombre, parentesco, telefono, identificacion)))",
+      )
+      .eq("id", id)
+      .maybeSingle(),
+    supabase
+      .from("planes")
+      .select("id, nombre, tipo, monto, horas_incluidas")
+      .eq("activo", true)
+      .order("monto"),
+  ]);
 
   if (!tutor) notFound();
 
@@ -123,6 +153,7 @@ export default async function FamiliaDetallePage({
               foto_url: string | null;
               salon: string | null;
               alergias: string | null;
+              plan: { nombre: string; tipo: string }[] | null;
               personas_autorizadas: {
                 id: string;
                 nombre: string;
@@ -181,6 +212,9 @@ export default async function FamiliaDetallePage({
                   <p className="text-xs text-foreground/60">
                     {edad(tn.nino.fecha_nacimiento)} · {tn.parentesco}
                   </p>
+                  <div className="mt-1">
+                    {insigniaPlan(tn.nino.plan?.[0] ?? null)}
+                  </div>
                   {tn.nino.salon && (
                     <p className="text-xs text-foreground/60">
                       Salón: {tn.nino.salon}
@@ -311,6 +345,26 @@ export default async function FamiliaDetallePage({
           name="parentesco"
           placeholder="Mamá, papá, etc."
         />
+        <div>
+          <label className="text-sm font-bold text-brand-blue-dark">
+            Plan
+          </label>
+          <select
+            name="plan_id"
+            defaultValue=""
+            className="mt-1 w-full rounded-lg border border-black/10 bg-white/70 px-3 py-2"
+          >
+            <option value="">Sin asignar (definir después)</option>
+            {(planes as Plan[] | null)?.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.nombre} — ${p.monto.toLocaleString("es-MX")}
+                {p.tipo === "tarjeta_horas"
+                  ? ` (${p.horas_incluidas} h, por horas)`
+                  : "/mes (tiempo completo)"}
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="sm:col-span-2">
           <FotoInput name="foto" label="Foto del niño/a (tipo credencial)" />
         </div>

@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { actualizarNino } from "@/app/admin/actions";
 import FotoInput from "@/components/admin/FotoInput";
+import type { Plan } from "@/components/admin/SelectorPlanPago";
 
 export default async function EditarNinoPage({
   params,
@@ -13,11 +14,14 @@ export default async function EditarNinoPage({
   const { id, ninoId } = await params;
   const supabase = await createClient();
 
-  const { data: nino } = await supabase
-    .from("ninos")
-    .select("*")
-    .eq("id", ninoId)
-    .maybeSingle();
+  const [{ data: nino }, { data: planes }] = await Promise.all([
+    supabase.from("ninos").select("*").eq("id", ninoId).maybeSingle(),
+    supabase
+      .from("planes")
+      .select("id, nombre, tipo, monto, horas_incluidas")
+      .eq("activo", true)
+      .order("monto"),
+  ]);
 
   if (!nino) notFound();
 
@@ -66,6 +70,26 @@ export default async function EditarNinoPage({
           defaultValue={nino.salon ?? ""}
           placeholder="Lactantes, Maternal 1, etc."
         />
+        <div>
+          <label className="text-sm font-bold text-brand-blue-dark">
+            Plan
+          </label>
+          <select
+            name="plan_id"
+            defaultValue={nino.plan_id ?? ""}
+            className="mt-1 w-full rounded-lg border border-black/10 bg-white/70 px-3 py-2"
+          >
+            <option value="">Sin asignar</option>
+            {(planes as Plan[] | null)?.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.nombre} — ${p.monto.toLocaleString("es-MX")}
+                {p.tipo === "tarjeta_horas"
+                  ? ` (${p.horas_incluidas} h, por horas)`
+                  : "/mes (tiempo completo)"}
+              </option>
+            ))}
+          </select>
+        </div>
         <Campo
           label="Tipo de sangre"
           name="tipo_sangre"
