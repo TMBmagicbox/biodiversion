@@ -57,8 +57,7 @@ export default async function EditarNinoPage({
           label="Fecha de nacimiento"
           name="fecha_nacimiento"
           type="date"
-          defaultValue={nino.fecha_nacimiento}
-          required
+          defaultValue={nino.fecha_nacimiento ?? ""}
         />
         <Campo
           label="Salón"

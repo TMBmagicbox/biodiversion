@@ -185,7 +185,7 @@ export async function actualizarNino(formData: FormData) {
       nombre: formData.get("nombre"),
       apellido_paterno: formData.get("apellido_paterno"),
       apellido_materno: formData.get("apellido_materno") || null,
-      fecha_nacimiento: formData.get("fecha_nacimiento"),
+      fecha_nacimiento: formData.get("fecha_nacimiento") || null,
       salon: formData.get("salon") || null,
       tipo_sangre: formData.get("tipo_sangre") || null,
       alergias: formData.get("alergias") || null,

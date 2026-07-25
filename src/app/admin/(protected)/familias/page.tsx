@@ -3,7 +3,8 @@ import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { Plus, User } from "lucide-react";
 
-function edad(fechaNacimiento: string) {
+function edad(fechaNacimiento: string | null) {
+  if (!fechaNacimiento) return "s/f";
   const nacimiento = new Date(fechaNacimiento);
   const hoy = new Date();
   let meses =
@@ -78,7 +79,7 @@ export default async function FamiliasPage() {
                       id: string;
                       nombre: string;
                       apellido_paterno: string;
-                      fecha_nacimiento: string;
+                      fecha_nacimiento: string | null;
                       foto_url: string | null;
                     } | null;
                   }) =>

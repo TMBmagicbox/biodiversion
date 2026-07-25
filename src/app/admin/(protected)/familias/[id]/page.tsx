@@ -11,7 +11,8 @@ import {
 import FotoLightbox from "@/components/admin/FotoLightbox";
 import BotonConfirmar from "@/components/admin/BotonConfirmar";
 
-function edad(fechaNacimiento: string) {
+function edad(fechaNacimiento: string | null) {
+  if (!fechaNacimiento) return "Fecha de nacimiento pendiente";
   const nacimiento = new Date(fechaNacimiento);
   const hoy = new Date();
   let meses =
@@ -115,7 +116,7 @@ export default async function FamiliaDetallePage({
               nombre: string;
               apellido_paterno: string;
               apellido_materno: string | null;
-              fecha_nacimiento: string;
+              fecha_nacimiento: string | null;
               foto_url: string | null;
               salon: string | null;
               alergias: string | null;
