@@ -210,9 +210,11 @@ export default async function AsistenciaPage() {
         </table>
       </div>
       <p className="mt-3 text-xs text-foreground/50">
-        * Las &ldquo;horas cobradas&rdquo; se redondean: a partir del minuto
-        21 de una fracción de hora, se cuenta como hora completa (ej. 1h
-        20min = 1h cobrada, 1h 21min = 2h cobradas).
+        * Las &ldquo;horas cobradas&rdquo; se redondean por separado: la
+        entrada siempre hacia abajo, a la hora en que llegó (ej. 7:15 se
+        cuenta desde las 7:00); la salida hacia arriba solo si pasó del
+        minuto 21 de esa hora (ej. 8:21 se cuenta como salida a las 9:00;
+        8:15 se cuenta como salida a las 8:00).
       </p>
     </div>
   );
