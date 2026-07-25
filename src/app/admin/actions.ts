@@ -12,6 +12,30 @@ export async function cerrarSesion() {
   redirect("/admin/login");
 }
 
+// Quintana Roo no cambia de horario (siempre UTC-5), así que podemos fijar
+// el offset y evitar líos de zona horaria entre el navegador y el servidor.
+const OFFSET_CANCUN = "-05:00";
+
+/** Fecha de hoy (YYYY-MM-DD) en horario de Cancún. */
+function fechaHoyCancun() {
+  return new Date().toLocaleDateString("en-CA", { timeZone: "America/Cancun" });
+}
+
+/** Hora actual (HH:MM) en horario de Cancún, para precargar los formularios. */
+function horaAhoraCancun() {
+  return new Date().toLocaleTimeString("en-GB", {
+    timeZone: "America/Cancun",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+/** Combina una hora "HH:MM" con el día de hoy y devuelve un timestamp ISO. */
+function horaDeHoyISO(hora: string | null | undefined) {
+  const horaValida = hora && /^\d{2}:\d{2}$/.test(hora) ? hora : horaAhoraCancun();
+  return `${fechaHoyCancun()}T${horaValida}:00${OFFSET_CANCUN}`;
+}
+
 // ---------- Familias (tutor + sus hijos, con fotos) ----------
 
 /** Crea un tutor y, en el mismo formulario, uno o más hijos vinculados. */
@@ -124,6 +148,8 @@ export async function registrarEntrada(formData: FormData) {
 
   const { error } = await supabase.from("asistencia").insert({
     nino_id: formData.get("nino_id"),
+    fecha: fechaHoyCancun(),
+    hora_entrada: horaDeHoyISO(formData.get("hora_entrada") as string | null),
     entregado_por: formData.get("entregado_por") || null,
     registrado_por: user?.id ?? null,
   });
@@ -138,7 +164,7 @@ export async function registrarSalida(formData: FormData) {
   const { error } = await supabase
     .from("asistencia")
     .update({
-      hora_salida: new Date().toISOString(),
+      hora_salida: horaDeHoyISO(formData.get("hora_salida") as string | null),
       recogido_por: formData.get("recogido_por") || null,
     })
     .eq("id", formData.get("asistencia_id"));

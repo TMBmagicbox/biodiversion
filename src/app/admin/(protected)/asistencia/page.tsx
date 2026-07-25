@@ -4,6 +4,7 @@ import { registrarEntrada, registrarSalida } from "@/app/admin/actions";
 function formatHora(iso: string | null) {
   if (!iso) return "—";
   return new Date(iso).toLocaleTimeString("es-MX", {
+    timeZone: "America/Cancun",
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -11,7 +12,20 @@ function formatHora(iso: string | null) {
 
 export default async function AsistenciaPage() {
   const supabase = await createClient();
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = new Date().toLocaleDateString("en-CA", {
+    timeZone: "America/Cancun",
+  });
+  const horaAhora = new Date().toLocaleTimeString("en-GB", {
+    timeZone: "America/Cancun",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const hoyLegible = new Date().toLocaleDateString("es-MX", {
+    timeZone: "America/Cancun",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
 
   const [{ data: ninos }, { data: registros }] = await Promise.all([
     supabase.from("ninos").select("id, nombre, apellido_paterno").eq("activo", true).order("nombre"),
@@ -27,6 +41,9 @@ export default async function AsistenciaPage() {
       <h1 className="text-2xl font-black text-brand-blue-dark">
         Asistencia de hoy — control de horas
       </h1>
+      <p className="mt-1 text-sm capitalize text-foreground/60">
+        {hoyLegible}
+      </p>
 
       <form
         action={registrarEntrada}
@@ -46,6 +63,18 @@ export default async function AsistenciaPage() {
               </option>
             ))}
           </select>
+        </div>
+        <div>
+          <label className="text-sm font-bold text-brand-blue-dark">
+            Hora de entrada
+          </label>
+          <input
+            type="time"
+            name="hora_entrada"
+            defaultValue={horaAhora}
+            required
+            className="mt-1 w-36 rounded-lg border border-black/10 px-3 py-2"
+          />
         </div>
         <div>
           <label className="text-sm font-bold text-brand-blue-dark">
@@ -91,12 +120,22 @@ export default async function AsistenciaPage() {
                   {r.hora_salida ? (
                     r.recogido_por || "—"
                   ) : (
-                    <form action={registrarSalida} className="flex gap-2">
+                    <form
+                      action={registrarSalida}
+                      className="flex flex-wrap items-center gap-2"
+                    >
                       <input type="hidden" name="asistencia_id" value={r.id} />
+                      <input
+                        type="time"
+                        name="hora_salida"
+                        defaultValue={horaAhora}
+                        required
+                        className="w-28 rounded-lg border border-black/10 px-2 py-1"
+                      />
                       <input
                         name="recogido_por"
                         placeholder="¿Quién lo recoge?"
-                        className="w-40 rounded-lg border border-black/10 px-2 py-1"
+                        className="w-36 rounded-lg border border-black/10 px-2 py-1"
                       />
                       <button
                         type="submit"
