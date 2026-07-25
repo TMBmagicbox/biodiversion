@@ -47,7 +47,7 @@ type Nino = {
   fecha_nacimiento: string | null;
   foto_url: string | null;
   salon: string | null;
-  plan: { nombre: string; tipo: string }[] | null;
+  plan: { nombre: string; tipo: string } | null;
   tutores_ninos: {
     parentesco: string;
     tutor: { id: string; nombre: string; apellido_paterno: string } | null;
@@ -84,7 +84,7 @@ function NinoCard({ n }: { n: Nino }) {
         </div>
       </div>
 
-      <div className="mt-2">{insigniaPlan(n.plan?.[0] ?? null)}</div>
+      <div className="mt-2">{insigniaPlan(n.plan ?? null)}</div>
 
       <div className="mt-3 flex flex-wrap gap-1.5">
         {tutores.length ? (
@@ -124,10 +124,10 @@ export default async function FamiliasPage() {
 
   const ninosList = (ninos ?? []) as unknown as Nino[];
   const tiempoCompleto = ninosList.filter(
-    (n) => n.plan?.[0]?.tipo !== "tarjeta_horas",
+    (n) => n.plan?.tipo !== "tarjeta_horas",
   );
   const porHoras = ninosList.filter(
-    (n) => n.plan?.[0]?.tipo === "tarjeta_horas",
+    (n) => n.plan?.tipo === "tarjeta_horas",
   );
 
   return (

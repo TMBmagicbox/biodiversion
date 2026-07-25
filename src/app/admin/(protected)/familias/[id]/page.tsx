@@ -153,7 +153,7 @@ export default async function FamiliaDetallePage({
               foto_url: string | null;
               salon: string | null;
               alergias: string | null;
-              plan: { nombre: string; tipo: string }[] | null;
+              plan: { nombre: string; tipo: string } | null;
               personas_autorizadas: {
                 id: string;
                 nombre: string;
@@ -213,7 +213,7 @@ export default async function FamiliaDetallePage({
                     {edad(tn.nino.fecha_nacimiento)} · {tn.parentesco}
                   </p>
                   <div className="mt-1">
-                    {insigniaPlan(tn.nino.plan?.[0] ?? null)}
+                    {insigniaPlan(tn.nino.plan ?? null)}
                   </div>
                   {tn.nino.salon && (
                     <p className="text-xs text-foreground/60">
