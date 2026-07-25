@@ -139,6 +139,48 @@ export async function agregarNinoAFamilia(formData: FormData) {
   redirect(`/admin/familias/${tutorId}`);
 }
 
+/** Crea un tutor nuevo y lo vincula a un niño/a que ya existe (por ejemplo,
+ * uno importado desde Excel que todavía no tenía tutor). */
+export async function crearTutorParaNino(formData: FormData) {
+  const supabase = await createClient();
+  const ninoId = String(formData.get("nino_id"));
+
+  const fotoTutorUrl = await subirFoto(
+    supabase,
+    formData.get("tutor_foto"),
+    "tutores",
+  );
+
+  const { data: tutor, error } = await supabase
+    .from("tutores")
+    .insert({
+      nombre: formData.get("nombre"),
+      apellido_paterno: formData.get("apellido_paterno"),
+      apellido_materno: formData.get("apellido_materno") || null,
+      telefono: formData.get("telefono"),
+      telefono_alternativo: formData.get("telefono_alternativo") || null,
+      email: formData.get("email") || null,
+      direccion: formData.get("direccion") || null,
+      foto_url: fotoTutorUrl,
+    })
+    .select("id")
+    .single();
+
+  if (error) throw new Error(error.message);
+
+  const { error: errorVinculo } = await supabase.from("tutores_ninos").insert({
+    tutor_id: tutor.id,
+    nino_id: ninoId,
+    parentesco: formData.get("parentesco") || "tutor",
+    contacto_principal: true,
+    autorizado_recoger: true,
+  });
+  if (errorVinculo) throw new Error(errorVinculo.message);
+
+  revalidatePath("/admin/familias");
+  redirect(`/admin/familias/${tutor.id}`);
+}
+
 /** Actualiza los datos de un tutor (y opcionalmente su foto). */
 export async function actualizarTutor(formData: FormData) {
   const supabase = await createClient();

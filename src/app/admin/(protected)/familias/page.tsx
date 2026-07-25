@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
-import { Plus, User } from "lucide-react";
+import { Plus, User, Baby, UserPlus } from "lucide-react";
 
 function edad(fechaNacimiento: string | null) {
   if (!fechaNacimiento) return "s/f";
@@ -17,10 +17,23 @@ function edad(fechaNacimiento: string | null) {
 
 export default async function FamiliasPage() {
   const supabase = await createClient();
-  const { data: tutores } = await supabase
-    .from("tutores")
-    .select("*, tutores_ninos(parentesco, nino:ninos(id, nombre, apellido_paterno, fecha_nacimiento, foto_url))")
-    .order("created_at", { ascending: false });
+  const [{ data: tutores }, { data: ninos }] = await Promise.all([
+    supabase
+      .from("tutores")
+      .select("*, tutores_ninos(parentesco, nino:ninos(id, nombre, apellido_paterno, fecha_nacimiento, foto_url))")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("ninos")
+      .select(
+        "id, nombre, apellido_paterno, apellido_materno, fecha_nacimiento, foto_url, salon, plan:planes(nombre), tutores_ninos(tutor_id)",
+      )
+      .eq("activo", true)
+      .order("nombre"),
+  ]);
+
+  const ninosSinTutor = (ninos ?? []).filter(
+    (n) => !n.tutores_ninos || n.tutores_ninos.length === 0,
+  );
 
   return (
     <div>
@@ -115,6 +128,59 @@ export default async function FamiliasPage() {
           </p>
         )}
       </div>
+
+      {ninosSinTutor.length > 0 && (
+        <div className="mt-10">
+          <h2 className="flex items-center gap-2 text-lg font-extrabold text-brand-blue-dark">
+            <Baby className="h-5 w-5" />
+            Niños sin tutor asignado ({ninosSinTutor.length})
+          </h2>
+          <p className="mt-1 text-sm text-foreground/60">
+            Importados desde el Excel — agrégales el tutor para completar la
+            familia.
+          </p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {ninosSinTutor.map((n) => (
+              <div
+                key={n.id}
+                className="glass flex items-center gap-3 rounded-2xl p-4"
+              >
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-green/10 text-brand-green-dark">
+                  {n.foto_url ? (
+                    <Image
+                      src={n.foto_url}
+                      alt={n.nombre}
+                      width={48}
+                      height={48}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <Baby className="h-6 w-6" strokeWidth={2} />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-extrabold text-brand-blue-dark">
+                    {n.nombre} {n.apellido_paterno}
+                  </p>
+                  <p className="truncate text-xs text-foreground/60">
+                    {edad(n.fecha_nacimiento)}
+                    {n.salon ? ` · ${n.salon}` : ""}
+                    {n.plan?.[0]?.nombre ? ` · ${n.plan[0].nombre}` : ""}
+                  </p>
+                </div>
+                <Link
+                  href={`/admin/familias/ninos/${n.id}/agregar-tutor`}
+                  aria-label={`Agregar tutor de ${n.nombre}`}
+                  className="flex shrink-0 items-center gap-1.5 rounded-full bg-brand-blue px-3 py-1.5 text-xs font-extrabold text-white transition-transform hover:scale-105"
+                >
+                  <UserPlus className="h-3.5 w-3.5" />
+                  Tutor
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
