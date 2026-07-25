@@ -139,6 +139,71 @@ export async function agregarNinoAFamilia(formData: FormData) {
   redirect(`/admin/familias/${tutorId}`);
 }
 
+/** Actualiza los datos de un tutor (y opcionalmente su foto). */
+export async function actualizarTutor(formData: FormData) {
+  const supabase = await createClient();
+  const tutorId = String(formData.get("tutor_id"));
+
+  const nuevaFotoUrl = await subirFoto(
+    supabase,
+    formData.get("foto"),
+    "tutores",
+  );
+
+  const { error } = await supabase
+    .from("tutores")
+    .update({
+      nombre: formData.get("nombre"),
+      apellido_paterno: formData.get("apellido_paterno"),
+      apellido_materno: formData.get("apellido_materno") || null,
+      telefono: formData.get("telefono"),
+      telefono_alternativo: formData.get("telefono_alternativo") || null,
+      email: formData.get("email") || null,
+      direccion: formData.get("direccion") || null,
+      ...(nuevaFotoUrl ? { foto_url: nuevaFotoUrl } : {}),
+    })
+    .eq("id", tutorId);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath(`/admin/familias/${tutorId}`);
+  revalidatePath("/admin/familias");
+  redirect(`/admin/familias/${tutorId}`);
+}
+
+/** Actualiza los datos de un niño/a (y opcionalmente su foto). */
+export async function actualizarNino(formData: FormData) {
+  const supabase = await createClient();
+  const ninoId = String(formData.get("nino_id"));
+  const tutorId = String(formData.get("tutor_id"));
+
+  const nuevaFotoUrl = await subirFoto(supabase, formData.get("foto"), "ninos");
+
+  const { error } = await supabase
+    .from("ninos")
+    .update({
+      nombre: formData.get("nombre"),
+      apellido_paterno: formData.get("apellido_paterno"),
+      apellido_materno: formData.get("apellido_materno") || null,
+      fecha_nacimiento: formData.get("fecha_nacimiento"),
+      salon: formData.get("salon") || null,
+      tipo_sangre: formData.get("tipo_sangre") || null,
+      alergias: formData.get("alergias") || null,
+      condiciones_medicas: formData.get("condiciones_medicas") || null,
+      medicamentos: formData.get("medicamentos") || null,
+      pediatra_nombre: formData.get("pediatra_nombre") || null,
+      pediatra_telefono: formData.get("pediatra_telefono") || null,
+      vacunas_al_dia: formData.get("vacunas_al_dia") === "on",
+      ...(nuevaFotoUrl ? { foto_url: nuevaFotoUrl } : {}),
+    })
+    .eq("id", ninoId);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath(`/admin/familias/${tutorId}`);
+  redirect(`/admin/familias/${tutorId}`);
+}
+
 // ---------- Asistencia ----------
 export async function registrarEntrada(formData: FormData) {
   const supabase = await createClient();
@@ -195,6 +260,41 @@ export async function registrarPago(formData: FormData) {
   if (error) throw new Error(error.message);
   revalidatePath("/admin/pagos");
   redirect("/admin/pagos");
+}
+
+/** Actualiza un pago ya registrado. */
+export async function actualizarPago(formData: FormData) {
+  const supabase = await createClient();
+  const pagoId = String(formData.get("pago_id"));
+
+  const { error } = await supabase
+    .from("pagos")
+    .update({
+      nino_id: formData.get("nino_id"),
+      tipo: formData.get("tipo"),
+      concepto: formData.get("concepto") || null,
+      monto: formData.get("monto"),
+      mes_correspondiente: formData.get("mes_correspondiente") || null,
+      fecha_pago: formData.get("fecha_pago") || null,
+      metodo_pago: formData.get("metodo_pago") || null,
+      estatus: formData.get("estatus") || "pagado",
+    })
+    .eq("id", pagoId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/pagos");
+  redirect("/admin/pagos");
+}
+
+/** Borra un pago registrado. */
+export async function eliminarPago(formData: FormData) {
+  const supabase = await createClient();
+  const pagoId = String(formData.get("pago_id"));
+
+  const { error } = await supabase.from("pagos").delete().eq("id", pagoId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/pagos");
 }
 
 // ---------- Usuarios del personal (panel admin) ----------

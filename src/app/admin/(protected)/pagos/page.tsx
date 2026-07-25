@@ -1,5 +1,8 @@
+import Link from "next/link";
+import { Download, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { registrarPago } from "@/app/admin/actions";
+import { registrarPago, eliminarPago } from "@/app/admin/actions";
+import BotonConfirmar from "@/components/admin/BotonConfirmar";
 
 export default async function PagosPage() {
   const supabase = await createClient();
@@ -15,7 +18,16 @@ export default async function PagosPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-black text-brand-blue-dark">Pagos</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-black text-brand-blue-dark">Pagos</h1>
+        <a
+          href="/admin/pagos/exportar"
+          className="flex items-center gap-2 rounded-full bg-brand-blue px-4 py-2 text-sm font-extrabold text-white transition-transform hover:scale-105"
+        >
+          <Download className="h-4 w-4" />
+          Exportar a Excel
+        </a>
+      </div>
 
       <form
         action={registrarPago}
@@ -99,6 +111,7 @@ export default async function PagosPage() {
               <th className="px-4 py-3">Fecha</th>
               <th className="px-4 py-3">Método</th>
               <th className="px-4 py-3">Estatus</th>
+              <th className="px-4 py-3">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -124,11 +137,31 @@ export default async function PagosPage() {
                     {p.estatus}
                   </span>
                 </td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <Link
+                      href={`/admin/pagos/${p.id}/editar`}
+                      aria-label="Editar pago"
+                      className="text-brand-blue-dark hover:text-brand-blue"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Link>
+                    <form action={eliminarPago}>
+                      <input type="hidden" name="pago_id" value={p.id} />
+                      <BotonConfirmar
+                        mensaje="¿Borrar este pago? Esta acción no se puede deshacer."
+                        className="text-xs font-bold text-red-600 hover:underline"
+                      >
+                        Borrar
+                      </BotonConfirmar>
+                    </form>
+                  </div>
+                </td>
               </tr>
             ))}
             {!pagos?.length && (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-foreground/50">
+                <td colSpan={7} className="px-4 py-6 text-center text-foreground/50">
                   Aún no hay pagos registrados.
                 </td>
               </tr>

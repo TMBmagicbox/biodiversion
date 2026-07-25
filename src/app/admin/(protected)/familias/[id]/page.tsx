@@ -1,9 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, User, Baby } from "lucide-react";
+import { ArrowLeft, User, Baby, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { agregarNinoAFamilia } from "@/app/admin/actions";
+import FotoLightbox from "@/components/admin/FotoLightbox";
 
 function edad(fechaNacimiento: string) {
   const nacimiento = new Date(fechaNacimiento);
@@ -45,8 +46,12 @@ export default async function FamiliaDetallePage({
       </Link>
 
       <div className="glass mt-4 flex items-center gap-4 rounded-2xl p-6">
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-blue/10 text-brand-blue-dark">
-          {tutor.foto_url ? (
+        {tutor.foto_url ? (
+          <FotoLightbox
+            src={tutor.foto_url}
+            alt={tutor.nombre}
+            className="h-16 w-16 shrink-0 overflow-hidden rounded-full bg-brand-blue/10 text-brand-blue-dark"
+          >
             <Image
               src={tutor.foto_url}
               alt={tutor.nombre}
@@ -54,11 +59,13 @@ export default async function FamiliaDetallePage({
               height={64}
               className="h-full w-full object-cover"
             />
-          ) : (
+          </FotoLightbox>
+        ) : (
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-blue/10 text-brand-blue-dark">
             <User className="h-8 w-8" strokeWidth={2} />
-          )}
-        </div>
-        <div>
+          </div>
+        )}
+        <div className="flex-1">
           <h1 className="text-xl font-black text-brand-blue-dark">
             {tutor.nombre} {tutor.apellido_paterno} {tutor.apellido_materno}
           </h1>
@@ -69,6 +76,13 @@ export default async function FamiliaDetallePage({
             <p className="text-sm text-foreground/60">{tutor.direccion}</p>
           )}
         </div>
+        <Link
+          href={`/admin/familias/${tutor.id}/editar`}
+          className="flex shrink-0 items-center gap-1.5 rounded-full border-2 border-black/10 px-4 py-2 text-sm font-extrabold text-brand-blue-dark transition-colors hover:bg-white/60"
+        >
+          <Pencil className="h-4 w-4" />
+          Editar
+        </Link>
       </div>
 
       <h2 className="mt-8 flex items-center gap-2 text-lg font-extrabold text-brand-blue-dark">
@@ -92,8 +106,12 @@ export default async function FamiliaDetallePage({
           }) =>
             tn.nino && (
               <div key={tn.nino.id} className="glass flex gap-3 rounded-2xl p-4">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-green/10 text-brand-green-dark">
-                  {tn.nino.foto_url ? (
+                {tn.nino.foto_url ? (
+                  <FotoLightbox
+                    src={tn.nino.foto_url}
+                    alt={tn.nino.nombre}
+                    className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-brand-green/10 text-brand-green-dark"
+                  >
                     <Image
                       src={tn.nino.foto_url}
                       alt={tn.nino.nombre}
@@ -101,14 +119,25 @@ export default async function FamiliaDetallePage({
                       height={56}
                       className="h-full w-full object-cover"
                     />
-                  ) : (
+                  </FotoLightbox>
+                ) : (
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-green/10 text-brand-green-dark">
                     <Baby className="h-7 w-7" strokeWidth={2} />
-                  )}
-                </div>
-                <div>
-                  <p className="font-extrabold text-brand-blue-dark">
-                    {tn.nino.nombre} {tn.nino.apellido_paterno}
-                  </p>
+                  </div>
+                )}
+                <div className="flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-extrabold text-brand-blue-dark">
+                      {tn.nino.nombre} {tn.nino.apellido_paterno}
+                    </p>
+                    <Link
+                      href={`/admin/familias/${tutor.id}/ninos/${tn.nino.id}/editar`}
+                      aria-label={`Editar a ${tn.nino.nombre}`}
+                      className="shrink-0 text-brand-blue-dark hover:text-brand-blue"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Link>
+                  </div>
                   <p className="text-xs text-foreground/60">
                     {edad(tn.nino.fecha_nacimiento)} · {tn.parentesco}
                   </p>
