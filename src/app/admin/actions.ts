@@ -405,10 +405,11 @@ export async function registrarPago(formData: FormData) {
   const ninoId = String(formData.get("nino_id"));
   const fechaPago = String(formData.get("fecha_pago") || "") || fechaHoyCancun();
   const estatus = String(formData.get("estatus") || "pagado");
+  const tipoPago = String(formData.get("tipo"));
 
   const { error } = await supabase.from("pagos").insert({
     nino_id: ninoId,
-    tipo: formData.get("tipo"),
+    tipo: tipoPago,
     concepto: formData.get("concepto") || null,
     monto: formData.get("monto"),
     mes_correspondiente: formData.get("mes_correspondiente") || null,
@@ -420,14 +421,43 @@ export async function registrarPago(formData: FormData) {
 
   if (error) throw new Error(error.message);
 
-  // Si el pago quedó "pagado" y el niño/a tiene un día de pago fijo,
-  // avanzamos su próxima fecha de pago un mes para el calendario/alertas.
   if (estatus === "pagado") {
     const { data: nino } = await supabase
       .from("ninos")
-      .select("dia_pago")
+      .select("dia_pago, proxima_fecha_pago")
       .eq("id", ninoId)
       .maybeSingle();
+
+    // Cargo automático por retardo: si la mensualidad se registra después
+    // de la fecha de pago que tenía asignada el niño/a, se agrega un pago
+    // aparte con el monto configurado en "Configuración de pagos".
+    if (
+      tipoPago === "mensualidad" &&
+      nino?.proxima_fecha_pago &&
+      estatusPago(nino.proxima_fecha_pago, fechaPago) === "vencido"
+    ) {
+      const { data: config } = await supabase
+        .from("configuracion_pagos")
+        .select("monto_recargo_tardio")
+        .eq("id", 1)
+        .maybeSingle();
+      const montoRecargo = Number(config?.monto_recargo_tardio ?? 0);
+      if (montoRecargo > 0) {
+        await supabase.from("pagos").insert({
+          nino_id: ninoId,
+          tipo: "recargo",
+          concepto: "Cargo automático por retardo de pago",
+          monto: montoRecargo,
+          fecha_pago: fechaPago,
+          metodo_pago: formData.get("metodo_pago") || null,
+          estatus: "pagado",
+          registrado_por: user?.id ?? null,
+        });
+      }
+    }
+
+    // Si el niño/a tiene un día de pago fijo, avanzamos su próxima fecha
+    // de pago un mes para el calendario/alertas.
     if (nino?.dia_pago) {
       await supabase
         .from("ninos")
@@ -440,6 +470,21 @@ export async function registrarPago(formData: FormData) {
 
   revalidatePath("/admin/pagos");
   redirect("/admin/pagos");
+}
+
+/** Actualiza el monto del cargo automático por retardo (fila única). */
+export async function actualizarConfiguracionPagos(formData: FormData) {
+  const supabase = await createClient();
+  const monto = Number(formData.get("monto_recargo_tardio") || 0);
+
+  const { error } = await supabase.from("configuracion_pagos").upsert({
+    id: 1,
+    monto_recargo_tardio: monto,
+    updated_at: new Date().toISOString(),
+  });
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/pagos");
 }
 
 /** Actualiza un pago ya registrado. */

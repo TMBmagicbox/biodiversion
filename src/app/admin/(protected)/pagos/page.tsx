@@ -1,9 +1,14 @@
 import Link from "next/link";
-import { Download, Pencil, BellRing } from "lucide-react";
+import { Download, Pencil, BellRing, Settings2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { registrarPago, eliminarPago } from "@/app/admin/actions";
+import {
+  registrarPago,
+  eliminarPago,
+  actualizarConfiguracionPagos,
+} from "@/app/admin/actions";
 import BotonConfirmar from "@/components/admin/BotonConfirmar";
 import SelectorPlanPago from "@/components/admin/SelectorPlanPago";
+import SelectorNinoPago from "@/components/admin/SelectorNinoPago";
 import BotonRecordatorios from "@/components/admin/BotonRecordatorios";
 import InvitarWhatsApp from "@/components/admin/InvitarWhatsApp";
 import { obtenerNinosPorVencerOVencidos } from "@/lib/deudores";
@@ -14,6 +19,14 @@ const TIPO_LEGIBLE: Record<string, string> = {
   inscripcion: "Inscripción",
   extra: "Extra",
   tarjeta_horas: "Tarjeta de horas",
+  recargo: "Cargo por retardo",
+};
+
+type NinoPlan = {
+  id: string;
+  nombre: string;
+  apellido_paterno: string;
+  plan: { nombre: string; tipo: "mensualidad" | "tarjeta_horas"; monto: number } | null;
 };
 
 export default async function PagosPage() {
@@ -22,21 +35,38 @@ export default async function PagosPage() {
     timeZone: "America/Cancun",
   });
 
-  const [{ data: ninos }, { data: pagos }, { data: planes }, porVencerOVencidos] =
-    await Promise.all([
-      supabase.from("ninos").select("id, nombre, apellido_paterno").eq("activo", true).order("nombre"),
-      supabase
-        .from("pagos")
-        .select("*, ninos(nombre, apellido_paterno)")
-        .order("fecha_pago", { ascending: false })
-        .limit(50),
-      supabase
-        .from("planes")
-        .select("id, nombre, tipo, monto, horas_incluidas")
-        .eq("activo", true)
-        .order("monto"),
-      obtenerNinosPorVencerOVencidos(hoy),
-    ]);
+  const [
+    { data: ninos },
+    { data: pagos },
+    { data: planes },
+    { data: configuracion },
+    porVencerOVencidos,
+  ] = await Promise.all([
+    supabase
+      .from("ninos")
+      .select("id, nombre, apellido_paterno, plan:planes(nombre, tipo, monto)")
+      .eq("activo", true)
+      .order("nombre"),
+    supabase
+      .from("pagos")
+      .select("*, ninos(nombre, apellido_paterno)")
+      .order("fecha_pago", { ascending: false })
+      .limit(50),
+    supabase
+      .from("planes")
+      .select("id, nombre, tipo, monto, horas_incluidas")
+      .eq("activo", true)
+      .order("monto"),
+    supabase
+      .from("configuracion_pagos")
+      .select("monto_recargo_tardio")
+      .eq("id", 1)
+      .maybeSingle(),
+    obtenerNinosPorVencerOVencidos(hoy),
+  ]);
+
+  const ninosList = (ninos ?? []) as unknown as NinoPlan[];
+  const montoRecargo = configuracion?.monto_recargo_tardio ?? 150;
 
   return (
     <div>
@@ -91,21 +121,53 @@ export default async function PagosPage() {
         </div>
       )}
 
+      <details className="glass mt-6 rounded-2xl p-6">
+        <summary className="flex cursor-pointer items-center gap-2 text-sm font-extrabold text-brand-blue-dark">
+          <Settings2 className="h-4 w-4" />
+          Configuración de pagos
+        </summary>
+        <form
+          action={actualizarConfiguracionPagos}
+          className="mt-4 flex flex-wrap items-end gap-3"
+        >
+          <div>
+            <label className="text-sm font-bold text-brand-blue-dark">
+              Cargo automático por retardo (MXN)
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              name="monto_recargo_tardio"
+              defaultValue={montoRecargo}
+              className="mt-1 w-40 rounded-lg border border-black/10 px-3 py-2"
+            />
+          </div>
+          <button
+            type="submit"
+            className="rounded-full bg-brand-blue px-4 py-2 text-sm font-extrabold text-white"
+          >
+            Guardar
+          </button>
+          <p className="w-full text-xs text-foreground/50">
+            Se agrega solo si se registra una mensualidad después de la
+            fecha de pago que tenía asignada el niño/a. Ponlo en 0 para
+            desactivarlo.
+          </p>
+        </form>
+      </details>
+
       <form
         action={registrarPago}
         className="glass mt-6 grid gap-4 rounded-2xl p-6 sm:grid-cols-3"
       >
-        <div>
-          <label className="text-sm font-bold text-brand-blue-dark">Niño</label>
-          <select name="nino_id" required className="mt-1 w-full rounded-lg border border-black/10 px-3 py-2">
-            <option value="">Selecciona…</option>
-            {ninos?.map((n) => (
-              <option key={n.id} value={n.id}>
-                {n.nombre} {n.apellido_paterno}
-              </option>
-            ))}
-          </select>
-        </div>
+        <SelectorNinoPago
+          ninos={ninosList.map((n) => ({
+            id: n.id,
+            nombre: n.nombre,
+            apellidoPaterno: n.apellido_paterno,
+            plan: n.plan,
+          }))}
+        />
         <SelectorPlanPago planes={planes ?? []} />
         <div>
           <label className="text-sm font-bold text-brand-blue-dark">Tipo</label>
@@ -172,6 +234,12 @@ export default async function PagosPage() {
           >
             Registrar pago
           </button>
+          <p className="mt-2 text-xs text-foreground/50">
+            Al elegir un niño/a se llenan solos el tipo, el monto y el
+            concepto según su plan (puedes editarlos a mano). Si la
+            mensualidad se registra después de su fecha de pago, se agrega
+            aparte un cargo por retardo de ${Number(montoRecargo).toLocaleString("es-MX")}.
+          </p>
         </div>
       </form>
 
