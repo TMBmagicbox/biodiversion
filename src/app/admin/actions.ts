@@ -740,6 +740,51 @@ export async function crearHeroSlide(formData: FormData) {
   redirect("/admin/inicio");
 }
 
+export async function actualizarHeroSlide(formData: FormData) {
+  const supabase = await createClient();
+  const id = formData.get("id");
+
+  const { data: actual } = await supabase
+    .from("hero_slides")
+    .select("imagen_fondo_url, imagen_decorativa_url, logo_url")
+    .eq("id", id)
+    .maybeSingle();
+
+  // Los inputs de imagen son opcionales al editar: si no se sube un archivo
+  // nuevo, se conserva la URL que ya estaba guardada.
+  const imagenFondoUrl =
+    (await subirFoto(supabase, formData.get("imagen_fondo"), "hero")) ??
+    actual?.imagen_fondo_url ??
+    null;
+  const imagenDecorativaUrl =
+    (await subirFoto(supabase, formData.get("imagen_decorativa"), "hero")) ??
+    actual?.imagen_decorativa_url ??
+    null;
+  const logoUrl =
+    (await subirFoto(supabase, formData.get("logo"), "hero")) ??
+    actual?.logo_url ??
+    null;
+
+  const { error } = await supabase
+    .from("hero_slides")
+    .update({
+      titulo: formData.get("titulo"),
+      descripcion: formData.get("descripcion") || null,
+      imagen_fondo_url: imagenFondoUrl,
+      imagen_decorativa_url: imagenDecorativaUrl,
+      logo_url: logoUrl,
+      texto_boton: formData.get("texto_boton") || "Agenda una visita",
+      url_boton: formData.get("url_boton") || "#contacto",
+    })
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/admin/inicio");
+  revalidatePath("/");
+  redirect("/admin/inicio");
+}
+
 export async function eliminarHeroSlide(formData: FormData) {
   const supabase = await createClient();
   const { error } = await supabase
@@ -871,4 +916,30 @@ export async function reintentarPublicacion(formData: FormData) {
 
   if (error) throw new Error(error.message);
   revalidatePath("/admin/blog");
+}
+
+// ---------- Mensajes de contacto (formulario público) ----------
+
+export async function alternarMensajeContacto(formData: FormData) {
+  const supabase = await createClient();
+  const atendido = formData.get("atendido") === "true";
+
+  const { error } = await supabase
+    .from("mensajes_contacto")
+    .update({ atendido: !atendido })
+    .eq("id", formData.get("id"));
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/mensajes");
+}
+
+export async function eliminarMensajeContacto(formData: FormData) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("mensajes_contacto")
+    .delete()
+    .eq("id", formData.get("id"));
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/mensajes");
 }

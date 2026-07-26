@@ -1,11 +1,12 @@
 import Image from "next/image";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import {
   crearHeroSlide,
   eliminarHeroSlide,
   alternarHeroSlide,
 } from "@/app/admin/actions";
-import { Eye, EyeOff, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Trash2, Pencil } from "lucide-react";
 
 export default async function InicioAdminPage() {
   const supabase = await createClient();
@@ -165,7 +166,13 @@ export default async function InicioAdminPage() {
                   {s.descripcion}
                 </p>
               )}
-              <div className="mt-3 flex items-center gap-2">
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <Link
+                  href={`/admin/inicio/${s.id}/editar`}
+                  className="flex items-center gap-1.5 rounded-full bg-brand-blue/10 px-3 py-1.5 text-xs font-bold text-brand-blue-dark hover:bg-brand-blue/20"
+                >
+                  <Pencil className="h-3.5 w-3.5" /> Editar
+                </Link>
                 <form action={alternarHeroSlide}>
                   <input type="hidden" name="id" value={s.id} />
                   <input

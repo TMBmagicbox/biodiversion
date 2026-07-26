@@ -13,6 +13,7 @@ import {
   UserCog,
   ImageIcon,
   Newspaper,
+  MessageSquare,
   LogOut,
   Menu,
   X,
@@ -25,6 +26,7 @@ const items = [
   { href: "/admin/pagos", label: "Pagos", Icon: CreditCard },
   { href: "/admin/blog", label: "Blog / Redes sociales", Icon: Newspaper },
   { href: "/admin/inicio", label: "Banner de inicio", Icon: ImageIcon },
+  { href: "/admin/mensajes", label: "Mensajes de contacto", Icon: MessageSquare },
   { href: "/admin/usuarios", label: "Usuarios del personal", Icon: UserCog },
 ];
 

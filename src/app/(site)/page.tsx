@@ -11,6 +11,7 @@ import {
 import FacebookIcon from "@/components/icons/FacebookIcon";
 import HeroSlider from "@/components/HeroSlider";
 import { createClient } from "@/lib/supabase/server";
+import { enviarMensajeContacto } from "@/app/(site)/actions";
 
 const servicios = [
   {
@@ -91,7 +92,12 @@ const jsonLd = {
   ],
 };
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ contacto?: string }>;
+}) {
+  const { contacto } = await searchParams;
   const supabase = await createClient();
   const { data: slides } = await supabase
     .from("hero_slides")
@@ -240,13 +246,29 @@ export default async function HomePage() {
                 </a>
               </li>
             </ul>
-            <form className="glass-strong mt-6 space-y-4 rounded-2xl p-6">
+            {contacto === "enviado" && (
+              <p className="mt-6 rounded-2xl bg-brand-green/15 px-4 py-3 text-center text-sm font-bold text-brand-green-dark">
+                ¡Gracias! Recibimos tu mensaje y te contactaremos pronto.
+              </p>
+            )}
+            {contacto === "error" && (
+              <p className="mt-6 rounded-2xl bg-red-100 px-4 py-3 text-center text-sm font-bold text-red-700">
+                No se pudo enviar tu mensaje. Intenta de nuevo o escríbenos
+                por WhatsApp/teléfono.
+              </p>
+            )}
+            <form
+              action={enviarMensajeContacto}
+              className="glass-strong mt-6 space-y-4 rounded-2xl p-6"
+            >
               <div>
                 <label className="text-sm font-bold text-brand-blue-dark">
                   Nombre
                 </label>
                 <input
                   type="text"
+                  name="nombre"
+                  required
                   className="mt-1 w-full rounded-lg border border-black/10 bg-white/70 px-3 py-2"
                   placeholder="Tu nombre"
                 />
@@ -257,6 +279,8 @@ export default async function HomePage() {
                 </label>
                 <input
                   type="text"
+                  name="contacto"
+                  required
                   className="mt-1 w-full rounded-lg border border-black/10 bg-white/70 px-3 py-2"
                   placeholder="¿Cómo te contactamos?"
                 />
@@ -266,7 +290,9 @@ export default async function HomePage() {
                   Mensaje
                 </label>
                 <textarea
+                  name="mensaje"
                   rows={3}
+                  required
                   className="mt-1 w-full rounded-lg border border-black/10 bg-white/70 px-3 py-2"
                   placeholder="Cuéntanos sobre tu hijo/a y qué información necesitas"
                 />
@@ -277,10 +303,6 @@ export default async function HomePage() {
               >
                 Enviar
               </button>
-              <p className="text-center text-xs text-foreground/50">
-                * Este formulario es una plantilla: conéctalo a tu correo o
-                WhatsApp (ver README).
-              </p>
             </form>
           </div>
         </div>
