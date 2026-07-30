@@ -5,7 +5,7 @@ import { Video, RefreshCw, Settings, Wifi, WifiOff, X, Maximize2, Minimize2 } fr
 
 const SERVER = process.env.NEXT_PUBLIC_CCTV_SERVER || "http://localhost:3001";
 const TOTAL = 8;
-const REFRESH_MS = 500; // Reducido para menos delay
+const REFRESH_MS = 800;
 const AULAS = ["Entrada","Patio","Maternal A","Maternal B","Pre-Kínder A","Pre-Kínder B","Kínder","Salida"];
 
 type Estatus = Record<number, "activo" | "sin-senal" | "cargando">;
@@ -26,6 +26,8 @@ export default function CamarasPage() {
   const [clock, setClock] = useState("");
   const [fullscreenCam, setFullscreenCam] = useState<number | null>(null);
   const timers = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
+  const fsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [fsSrc, setFsSrc] = useState("");
 
   useEffect(() => {
     const tick = () => setClock(new Date().toLocaleTimeString("es-MX", { hour12: false, timeZone: "America/Cancun" }));
@@ -40,12 +42,38 @@ export default function CamarasPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Cerrar fullscreen con ESC
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setFullscreenCam(null); };
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") cerrarFullscreen(); };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ── Fullscreen: cargar cámara independiente ────────────
+  useEffect(() => {
+    if (fullscreenCam === null || !token) return;
+    if (fsTimer.current) clearTimeout(fsTimer.current);
+
+    const loadFs = () => {
+      // Canal principal subtype=0 = máxima resolución
+      const url = `${SERVER}/api/cameras/snapshot/${fullscreenCam}?token=${token}&subtype=0&t=${Date.now()}`;
+      const img = new Image();
+      img.onload = () => {
+        setFsSrc(url);
+        fsTimer.current = setTimeout(loadFs, REFRESH_MS);
+      };
+      img.onerror = () => { fsTimer.current = setTimeout(loadFs, 1500); };
+      img.src = url;
+    };
+    loadFs();
+    return () => { if (fsTimer.current) clearTimeout(fsTimer.current); };
+  }, [fullscreenCam, token]);
+
+  const cerrarFullscreen = () => {
+    setFullscreenCam(null);
+    setFsSrc("");
+    if (fsTimer.current) clearTimeout(fsTimer.current);
+  };
 
   const verificarToken = async (t: string) => {
     try {
@@ -61,7 +89,7 @@ export default function CamarasPage() {
       const r = await fetch(`${SERVER}/api/dvr`, { headers: { Authorization: `Bearer ${t}` } });
       const d = await r.json();
       setDvrOk(d.configured);
-      if (d.dvr) setDvrFields(f => ({ ...f, ip: d.dvr.ip || "", port: String(d.dvr.port || 80), user: d.dvr.user || "admin", channels: String(d.dvr.channels || 8) }));
+      if (d.dvr) setDvrFields(f => ({ ...f, ip: d.dvr.ip||"", port: String(d.dvr.port||80), user: d.dvr.user||"admin", channels: String(d.dvr.channels||8) }));
     } catch {}
   };
 
@@ -69,31 +97,29 @@ export default function CamarasPage() {
     if (!userId || !password) { setLoginErr("Completa todos los campos"); return; }
     setLogging(true); setLoginErr("");
     try {
-      const r = await fetch(`${SERVER}/api/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId, password }) });
+      const r = await fetch(`${SERVER}/api/login`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({userId,password}) });
       const d = await r.json();
       if (d.success) { localStorage.setItem("cctv_token", d.token); setToken(d.token); checkDVR(d.token); }
-      else setLoginErr(d.message || "Credenciales incorrectas");
+      else setLoginErr(d.message||"Credenciales incorrectas");
     } catch { setLoginErr(`No se puede conectar al servidor CCTV (${SERVER})`); }
     finally { setLogging(false); }
   };
 
-  const logout = () => { localStorage.removeItem("cctv_token"); stopAll(); setToken(""); setFullscreenCam(null); };
+  const logout = () => { localStorage.removeItem("cctv_token"); stopAll(); setToken(""); cerrarFullscreen(); };
 
   const stopAll = useCallback(() => { Object.values(timers.current).forEach(clearTimeout); timers.current = {}; }, []);
 
   const loadCam = useCallback((ch: number, t: string) => {
     if (timers.current[ch]) clearTimeout(timers.current[ch]);
-    const img = document.getElementById(`bio-cam-${ch}`) as HTMLImageElement | null;
+    const img = document.getElementById(`bio-cam-${ch}`) as HTMLImageElement|null;
     if (!img) return;
     setEstatus(s => ({ ...s, [ch]: "cargando" }));
     const reload = () => {
-      const newImg = new Image();
-      newImg.onload = () => {
-        img.src = newImg.src;
-        setEstatus(s => ({ ...s, [ch]: "activo" }));
-      };
-      newImg.onerror = () => setEstatus(s => ({ ...s, [ch]: "sin-senal" }));
-      newImg.src = `${SERVER}/api/cameras/snapshot/${ch}?token=${t}&t=${Date.now()}`;
+      const tmp = new Image();
+      tmp.onload = () => { img.src = tmp.src; setEstatus(s => ({ ...s, [ch]: "activo" })); };
+      tmp.onerror = () => setEstatus(s => ({ ...s, [ch]: "sin-senal" }));
+      // subtype=1 para el grid (más liviano), subtype=0 para fullscreen (máxima calidad)
+      tmp.src = `${SERVER}/api/cameras/snapshot/${ch}?token=${t}&t=${Date.now()}`;
       timers.current[ch] = setTimeout(reload, REFRESH_MS);
     };
     reload();
@@ -109,21 +135,21 @@ export default function CamarasPage() {
   const refreshAll = () => { stopAll(); for (let ch = 1; ch <= TOTAL; ch++) loadCam(ch, token); };
 
   const saveDVR = async () => {
-    await fetch(`${SERVER}/api/dvr`, { method: "PUT", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ ip: dvrFields.ip, port: parseInt(dvrFields.port)||80, user: dvrFields.user, pass: dvrFields.pass, channels: parseInt(dvrFields.channels)||8 }) });
+    await fetch(`${SERVER}/api/dvr`, { method:"PUT", headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},
+      body:JSON.stringify({ip:dvrFields.ip, port:parseInt(dvrFields.port)||80, user:dvrFields.user, pass:dvrFields.pass, channels:parseInt(dvrFields.channels)||8}) });
   };
 
   const testDVR = async () => {
     setTestResult(null); await saveDVR();
     try {
-      const r = await fetch(`${SERVER}/api/dvr/test`, { headers: { Authorization: `Bearer ${token}` } });
+      const r = await fetch(`${SERVER}/api/dvr/test`, { headers:{Authorization:`Bearer ${token}`} });
       const d = await r.json();
       setTestResult(d);
       if (d.success) { setDvrOk(true); refreshAll(); }
-    } catch { setTestResult({ success: false, message: "Error de conexión" }); }
+    } catch { setTestResult({success:false, message:"Error de conexión"}); }
   };
 
-  const gridCols = layout === 1 ? "grid-cols-1" : layout === 4 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4";
+  const gridCols = layout===1?"grid-cols-1":layout===4?"grid-cols-1 sm:grid-cols-2":"grid-cols-1 sm:grid-cols-2 lg:grid-cols-4";
 
   // ── Login ──────────────────────────────────────────────
   if (!token) return (
@@ -136,14 +162,14 @@ export default function CamarasPage() {
         <div className="space-y-4">
           <div>
             <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-500">Usuario</label>
-            <input type="text" value={userId} onChange={e => setUserId(e.target.value)} onKeyDown={e => e.key === "Enter" && doLogin()} placeholder="biodiversion-goodmode" className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20" />
+            <input type="text" value={userId} onChange={e=>setUserId(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doLogin()} placeholder="biodiversion-goodmode" className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20"/>
           </div>
           <div>
             <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-500">Contraseña</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === "Enter" && doLogin()} placeholder="••••••••" className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20" />
+            <input type="password" value={password} onChange={e=>setPassword(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doLogin()} placeholder="••••••••" className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20"/>
           </div>
-          {loginErr && <p className="rounded-xl bg-red-50 px-4 py-2 text-xs font-bold text-red-600">{loginErr}</p>}
-          <button onClick={doLogin} disabled={logging} className="w-full rounded-xl bg-brand-blue py-3 text-sm font-bold text-white transition hover:bg-brand-blue-dark disabled:opacity-50">{logging ? "Verificando…" : "Entrar →"}</button>
+          {loginErr&&<p className="rounded-xl bg-red-50 px-4 py-2 text-xs font-bold text-red-600">{loginErr}</p>}
+          <button onClick={doLogin} disabled={logging} className="w-full rounded-xl bg-brand-blue py-3 text-sm font-bold text-white transition hover:bg-brand-blue-dark disabled:opacity-50">{logging?"Verificando…":"Entrar →"}</button>
         </div>
         <p className="mt-4 text-center text-xs text-gray-400">Servidor: <span className="font-mono">{SERVER}</span></p>
       </div>
@@ -153,28 +179,33 @@ export default function CamarasPage() {
   // ── Fullscreen ─────────────────────────────────────────
   if (fullscreenCam !== null) return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black">
-      {/* Header */}
-      <div className="flex items-center justify-between bg-gray-900/95 px-4 py-2">
+      <div className="flex items-center justify-between bg-gray-900/95 px-4 py-2 flex-shrink-0">
         <div className="flex items-center gap-3">
           <span className="font-mono text-sm font-bold text-brand-blue">CAM {String(fullscreenCam).padStart(2,"0")}</span>
           <span className="text-sm text-gray-400">{AULAS[fullscreenCam-1]}</span>
-          {estatus[fullscreenCam] === "activo" && <span className="flex items-center gap-1 text-xs text-green-400"><span className="h-1.5 w-1.5 rounded-full bg-green-400" />En vivo</span>}
+          <span className="rounded-full bg-green-900/50 px-2 py-0.5 text-xs font-bold text-green-400">Alta resolución</span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <span className="font-mono text-sm text-gray-400">{clock}</span>
-          <button onClick={() => setFullscreenCam(null)} className="flex items-center gap-2 rounded-lg bg-gray-800 px-3 py-1.5 text-sm font-bold text-white hover:bg-gray-700">
-            <Minimize2 className="h-4 w-4" /> Salir (ESC)
+          <button onClick={cerrarFullscreen} className="flex items-center gap-2 rounded-lg bg-gray-800 px-3 py-1.5 text-sm font-bold text-white hover:bg-gray-700">
+            <Minimize2 className="h-4 w-4"/> Salir (ESC)
           </button>
         </div>
       </div>
-      {/* Imagen */}
+
+      {/* Imagen fullscreen — alta resolución */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img id={`bio-cam-${fullscreenCam}`} alt={`CAM ${fullscreenCam}`} className="flex-1 w-full object-contain" />
-      {/* Navegación entre cámaras */}
-      <div className="flex items-center justify-center gap-2 bg-gray-900/95 py-2 px-4 flex-wrap">
-        {Array.from({ length: TOTAL }, (_, i) => i+1).map(ch => (
-          <button key={ch} onClick={() => { stopAll(); setFullscreenCam(ch); setTimeout(() => { for(let i=1;i<=TOTAL;i++) loadCam(i,token); }, 100); }}
-            className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${fullscreenCam === ch ? "bg-brand-blue text-white" : "bg-gray-800 text-gray-400 hover:bg-gray-700"}`}>
+      <img
+        src={fsSrc || `${SERVER}/api/cameras/snapshot/${fullscreenCam}?token=${token}&t=${Date.now()}`}
+        alt={`CAM ${fullscreenCam}`}
+        className="min-h-0 flex-1 w-full object-contain"
+      />
+
+      {/* Selector de cámaras */}
+      <div className="flex flex-shrink-0 flex-wrap items-center justify-center gap-2 bg-gray-900/95 px-4 py-2">
+        {Array.from({length:TOTAL},(_,i)=>i+1).map(ch=>(
+          <button key={ch} onClick={()=>setFullscreenCam(ch)}
+            className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${fullscreenCam===ch?"bg-brand-blue text-white":"bg-gray-800 text-gray-400 hover:bg-gray-700"}`}>
             CAM {String(ch).padStart(2,"0")}
           </button>
         ))}
@@ -185,44 +216,42 @@ export default function CamarasPage() {
   // ── Vista normal ───────────────────────────────────────
   return (
     <div>
-      {/* Header */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <h1 className="text-xl font-bold text-brand-blue-dark">📹 Cámaras en Vivo</h1>
           <span className="flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-600">
-            <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-red-500" />EN VIVO
+            <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-red-500"/>EN VIVO
           </span>
-          {!dvrOk && <span className="flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-700"><WifiOff className="h-3 w-3" />Modo demo</span>}
-          {dvrOk && <span className="flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700"><Wifi className="h-3 w-3" />DVR conectado</span>}
+          {!dvrOk&&<span className="flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-700"><WifiOff className="h-3 w-3"/>Modo demo</span>}
+          {dvrOk&&<span className="flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700"><Wifi className="h-3 w-3"/>DVR conectado</span>}
           <span className="font-mono text-sm text-gray-400">{clock}</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex overflow-hidden rounded-xl border border-gray-200 bg-white">
-            {([1,4,8] as const).map(n => (
-              <button key={n} onClick={() => setLayout(n)} className={`px-3 py-1.5 text-xs font-bold transition ${layout===n?"bg-brand-blue text-white":"text-gray-500 hover:bg-gray-50"}`}>{n}</button>
+            {([1,4,8] as const).map(n=>(
+              <button key={n} onClick={()=>setLayout(n)} className={`px-3 py-1.5 text-xs font-bold transition ${layout===n?"bg-brand-blue text-white":"text-gray-500 hover:bg-gray-50"}`}>{n}</button>
             ))}
           </div>
-          <button onClick={refreshAll} className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-600 transition hover:border-brand-blue hover:text-brand-blue"><RefreshCw className="h-3.5 w-3.5" />Refrescar</button>
-          <button onClick={() => { setTestResult(null); setDvrModal(true); checkDVR(token); }} className="flex items-center gap-2 rounded-xl bg-brand-blue px-3 py-1.5 text-xs font-bold text-white transition hover:bg-brand-blue-dark"><Settings className="h-3.5 w-3.5" />DVR</button>
+          <button onClick={refreshAll} className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-600 transition hover:border-brand-blue hover:text-brand-blue"><RefreshCw className="h-3.5 w-3.5"/>Refrescar</button>
+          <button onClick={()=>{setTestResult(null);setDvrModal(true);checkDVR(token);}} className="flex items-center gap-2 rounded-xl bg-brand-blue px-3 py-1.5 text-xs font-bold text-white transition hover:bg-brand-blue-dark"><Settings className="h-3.5 w-3.5"/>DVR</button>
           <button onClick={logout} className="rounded-xl border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-bold text-red-600 transition hover:bg-red-100">Salir</button>
         </div>
       </div>
 
-      {/* Grid */}
       <div className={`grid gap-3 ${gridCols}`}>
-        {Array.from({ length: TOTAL }, (_, i) => i+1).map(ch => (
-          <div key={ch} className="group overflow-hidden rounded-xl border border-gray-200 bg-black shadow-sm transition hover:border-brand-blue hover:shadow-md cursor-pointer" onClick={() => setFullscreenCam(ch)}>
+        {Array.from({length:TOTAL},(_,i)=>i+1).map(ch=>(
+          <div key={ch} className="group cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-black shadow-sm transition hover:border-brand-blue hover:shadow-md" onClick={()=>setFullscreenCam(ch)}>
             <div className="flex items-center justify-between bg-gray-900/90 px-3 py-1.5">
               <span className="font-mono text-xs font-bold text-brand-blue">CAM {String(ch).padStart(2,"0")}</span>
               <div className="flex items-center gap-2">
-                {estatus[ch]==="activo" && <span className="flex items-center gap-1 text-xs text-green-400"><span className="h-1.5 w-1.5 rounded-full bg-green-400" />Activo</span>}
-                {estatus[ch]==="sin-senal" && <span className="flex items-center gap-1 text-xs text-red-400"><span className="h-1.5 w-1.5 rounded-full bg-red-400" />Sin señal</span>}
-                {(!estatus[ch]||estatus[ch]==="cargando") && <span className="text-xs text-gray-500">Conectando…</span>}
-                <Maximize2 className="h-3 w-3 text-gray-600 opacity-0 group-hover:opacity-100 transition" />
+                {estatus[ch]==="activo"&&<span className="flex items-center gap-1 text-xs text-green-400"><span className="h-1.5 w-1.5 rounded-full bg-green-400"/>Activo</span>}
+                {estatus[ch]==="sin-senal"&&<span className="flex items-center gap-1 text-xs text-red-400"><span className="h-1.5 w-1.5 rounded-full bg-red-400"/>Sin señal</span>}
+                {(!estatus[ch]||estatus[ch]==="cargando")&&<span className="text-xs text-gray-500">Conectando…</span>}
+                <Maximize2 className="h-3 w-3 text-gray-500 opacity-0 transition group-hover:opacity-100"/>
               </div>
             </div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img id={`bio-cam-${ch}`} alt={`Cámara ${ch}`} className="aspect-video w-full object-cover" />
+            <img id={`bio-cam-${ch}`} alt={`Cámara ${ch}`} className="aspect-video w-full object-cover"/>
             <div className="bg-gray-900/80 px-3 py-1">
               <span className="font-mono text-xs text-gray-400">{AULAS[ch-1]}</span>
             </div>
@@ -230,17 +259,16 @@ export default function CamarasPage() {
         ))}
       </div>
 
-      {/* Modal DVR */}
-      {dvrModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={e => e.target===e.currentTarget&&setDvrModal(false)}>
+      {dvrModal&&(
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={e=>e.target===e.currentTarget&&setDvrModal(false)}>
           <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-bold text-brand-blue-dark">⚙️ Configurar DVR Dahua</h3>
-              <button onClick={() => setDvrModal(false)} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100"><X className="h-5 w-5" /></button>
+              <button onClick={()=>setDvrModal(false)} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100"><X className="h-5 w-5"/></button>
             </div>
             <div className="mb-4 rounded-xl bg-brand-blue-light p-3 text-xs text-brand-blue-dark">Las credenciales se guardan en el servidor. Mismo protocolo que EasyViewer Pro.</div>
             <div className="grid grid-cols-2 gap-3">
-              {[{ label:"IP del DVR *",key:"ip",placeholder:"192.168.100.108"},{label:"Puerto HTTP",key:"port",placeholder:"80"},{label:"Usuario",key:"user",placeholder:"admin"},{label:"Contraseña",key:"pass",placeholder:"••••••••",type:"password"}].map(f=>(
+              {[{label:"IP del DVR *",key:"ip",placeholder:"192.168.100.108"},{label:"Puerto HTTP",key:"port",placeholder:"80"},{label:"Usuario",key:"user",placeholder:"admin"},{label:"Contraseña",key:"pass",placeholder:"••••••••",type:"password"}].map(f=>(
                 <div key={f.key}>
                   <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-500">{f.label}</label>
                   <input type={f.type||"text"} placeholder={f.placeholder} value={dvrFields[f.key as keyof DvrFields]} onChange={e=>setDvrFields(d=>({...d,[f.key]:e.target.value}))} className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20"/>
@@ -265,3 +293,4 @@ export default function CamarasPage() {
     </div>
   );
 }
+Listo
