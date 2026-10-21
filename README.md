@@ -162,7 +162,8 @@ el momento:
 
 ## Fotos del local
 
-En la sección "Nuestras instalaciones" de la página de inicio hay tarjetas
-de marcador de posición. Cuando tengas fotos reales del local, colócalas en
-`public/images/instalaciones/` y reemplaza esa sección en
-`src/app/(site)/page.tsx`.
+La sección "Nuestras instalaciones" muestra las fotos del bucket de
+Supabase `fotos/instalaciones` (se suben en `/admin/instalaciones`) y, si
+existen, los archivos de `public/images/instalaciones/`. Si no hay fotos,
+el sitio describe los espacios (jardín, sala de juegos, cocina, baños,
+clima y estacionamiento) y no muestra tarjetas vacías.

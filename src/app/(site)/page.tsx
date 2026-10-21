@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import {
   Baby,
   Apple,
@@ -6,24 +7,52 @@ import {
   HeartHandshake,
   ShieldCheck,
   Phone,
-  ImageIcon,
+  Trees,
+  Puzzle,
+  UtensilsCrossed,
+  Bath,
+  Wind,
+  Car,
 } from "lucide-react";
 import FacebookIcon from "@/components/icons/FacebookIcon";
-import HeroSlider from "@/components/HeroSlider";
-import { createClient } from "@/lib/supabase/server";
-import { enviarMensajeContacto } from "@/app/(site)/actions";
+import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
+import FilaPersonajes from "@/components/FilaPersonajes";
+import FormularioContacto from "@/components/FormularioContacto";
+import { fotosInstalaciones } from "@/lib/contenido-publico";
+import { PERSONAJES } from "@/lib/personajes";
+import {
+  DIRECCION_LINEA,
+  EDAD_ATENCION,
+  FACEBOOK_URL,
+  GEO,
+  HERO_DESCRIPCION,
+  HORARIOS,
+  MAPS_EMBED,
+  MAPS_URL,
+  SITE_URL,
+  TELEFONOS,
+  TEXTO_MENUS,
+  WHATSAPP_URL,
+} from "@/lib/site";
+import Image from "next/image";
+
+export const revalidate = 300;
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+  openGraph: { url: "/" },
+};
 
 const servicios = [
   {
     titulo: "Estancia infantil",
     detalle:
-      "Guarda, custodia, aseo y cuidado diario para bebés desde 45 días de nacidos hasta niños de 4 años.",
+      "Guarda, custodia, aseo y cuidado diario. Atendemos bebés desde los 3 meses hasta los 4 años.",
     Icon: Baby,
   },
   {
     titulo: "Alimentación",
-    detalle:
-      "Menús balanceados y horarios de comida personalizados según la edad y necesidades de cada niño.",
+    detalle: TEXTO_MENUS,
     Icon: Apple,
   },
   {
@@ -52,60 +81,88 @@ const servicios = [
   },
 ];
 
-const horarios = [
-  { dia: "Lunes a viernes", horas: "7:00 am – 7:00 pm" },
-  { dia: "Sábado", horas: "7:00 am – 4:00 pm" },
-  { dia: "Domingo", horas: "Cerrado" },
+const espacios = [
+  {
+    titulo: "Jardín",
+    detalle: "Juego al aire libre y contacto con la naturaleza.",
+    Icon: Trees,
+  },
+  {
+    titulo: "Sala de juegos",
+    detalle: "Espacio para motricidad, juego y estimulación.",
+    Icon: Puzzle,
+  },
+  {
+    titulo: "Cocina",
+    detalle: "Preparación de comida según la edad de cada niño.",
+    Icon: UtensilsCrossed,
+  },
+  {
+    titulo: "Baños adaptados",
+    detalle: "Aseo y cambio de pañal con medidas de higiene.",
+    Icon: Bath,
+  },
+  {
+    titulo: "Clima",
+    detalle: "Aire acondicionado en las áreas de estancia.",
+    Icon: Wind,
+  },
+  {
+    titulo: "Estacionamiento",
+    detalle: "Acceso para dejar y recoger con más calma.",
+    Icon: Car,
+  },
 ];
 
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "ChildCare",
-  name: "Biodiversión",
-  description:
-    "Guardería y estancia infantil en Cancún para bebés desde 45 días hasta niños de 4 años.",
-  url: "https://biodiversion.vercel.app",
-  telephone: "+52-998-129-0100",
-  image: "https://biodiversion.vercel.app/images/logo.png",
-  address: {
-    "@type": "PostalAddress",
-    streetAddress: "Av. Kohunlich 210, SM 50",
-    addressLocality: "Cancún",
-    addressRegion: "Quintana Roo",
-    postalCode: "77533",
-    addressCountry: "MX",
-  },
-  sameAs: ["https://www.facebook.com/biodiversion"],
-  openingHoursSpecification: [
-    {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-      opens: "07:00",
-      closes: "19:00",
-    },
-    {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: "Saturday",
-      opens: "07:00",
-      closes: "16:00",
-    },
-  ],
-};
+export default async function HomePage() {
+  const fotos = await fotosInstalaciones();
 
-export default async function HomePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ contacto?: string }>;
-}) {
-  const { contacto } = await searchParams;
-  const supabase = await createClient();
-  const { data: slides } = await supabase
-    .from("hero_slides")
-    .select(
-      "id, titulo, descripcion, imagen_fondo_url, imagen_decorativa_url, logo_url, texto_boton, url_boton",
-    )
-    .eq("activo", true)
-    .order("orden", { ascending: true });
+  const imagen = `${SITE_URL}/personajes/trio-abrazo.jpg`;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ChildCare",
+    "@id": `${SITE_URL}/#guarderia`,
+    name: "Biodiversión",
+    description: `Guardería y estancia infantil en Cancún. ${EDAD_ATENCION}`,
+    url: SITE_URL,
+    telephone: ["+52-998-129-0100", "+52-998-372-4752"],
+    image: imagen,
+    inLanguage: "es-MX",
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "Av. Kohunlich 210, SM 50",
+      addressLocality: "Cancún",
+      addressRegion: "Quintana Roo",
+      postalCode: "77533",
+      addressCountry: "MX",
+    },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: GEO.latitude,
+      longitude: GEO.longitude,
+    },
+    hasMap: MAPS_URL,
+    areaServed: {
+      "@type": "City",
+      name: "Cancún",
+    },
+    sameAs: [FACEBOOK_URL],
+    openingHours: ["Mo-Fr 07:00-19:00", "Sa 08:00-16:00"],
+    openingHoursSpecification: HORARIOS.filter((horario) => horario.abre).map(
+      (horario) => ({
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: horario.dias,
+        opens: horario.abre,
+        closes: horario.cierra,
+      }),
+    ),
+    amenityFeature: espacios.map((espacio) => ({
+      "@type": "LocationFeatureSpecification",
+      name: espacio.titulo,
+      value: true,
+    })),
+  };
 
   return (
     <div>
@@ -113,58 +170,177 @@ export default async function HomePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {/* Banner de inicio: 100% de ancho, slider con parallax */}
-      <HeroSlider slides={slides ?? []} />
+      <section className="bg-[#F6E4CC]">
+        <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:py-16">
+          <div>
+            <p className="inline-block rounded-full bg-white/80 px-4 py-1 text-sm font-bold text-brand-blue-dark">
+              Guardería en Cancún · SM 50
+            </p>
+            <h1 className="mt-4 text-3xl font-bold leading-tight text-brand-blue-dark sm:text-5xl">
+              Un lugar cálido para que tu hijo crezca, juegue y se sienta en casa
+            </h1>
+            <p className="mt-4 max-w-xl text-base leading-relaxed text-foreground/85 sm:text-lg">
+              {HERO_DESCRIPCION}
+            </p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <a
+                href="#contacto"
+                className="rounded-full bg-brand-green px-6 py-3 text-center font-extrabold text-[#14240a]"
+              >
+                Agenda una visita
+              </a>
+              <a
+                href={WHATSAPP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-full bg-[#075E54] px-6 py-3 text-center font-extrabold text-white"
+              >
+                WhatsApp
+              </a>
+            </div>
+            <p className="mt-4 text-sm font-bold text-brand-blue-dark">
+              Llámanos:{" "}
+              {TELEFONOS.map((telefono, indice) => (
+                <span key={telefono.tel}>
+                  {indice > 0 && " · "}
+                  <a href={telefono.tel} className="underline underline-offset-2">
+                    {telefono.display}
+                  </a>
+                </span>
+              ))}
+            </p>
+          </div>
+          <div>
+            <Image
+              src="/personajes/trio-abrazo.jpg"
+              alt="Rosa, Verde y Púrpura abrazados. Verde mide el 88% de Rosa y Púrpura el 73%."
+              width={1140}
+              height={696}
+              priority
+              className="h-auto w-full"
+            />
+            <ul className="mt-4 grid gap-3 sm:grid-cols-3">
+              {PERSONAJES.map((personaje) => (
+                <li
+                  key={personaje.id}
+                  className={`burbuja burbuja-${personaje.id} text-sm leading-snug`}
+                >
+                  <p className="font-extrabold text-brand-blue-dark">
+                    {personaje.nombre}
+                  </p>
+                  <p className="mt-1 font-semibold">{personaje.burbuja}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
 
-      {/* Servicios */}
+      <section id="amigos" className="mx-auto max-w-6xl scroll-mt-24 px-4 py-16 sm:px-6">
+        <h2 className="text-center text-3xl font-bold text-brand-blue-dark">
+          Conoce a nuestros amigos
+        </h2>
+        <p className="mx-auto mt-3 max-w-2xl text-center text-foreground/80">
+          Rosa, Verde y Púrpura acompañan el día a día. {EDAD_ATENCION}
+        </p>
+        <div className="mt-10">
+          <FilaPersonajes />
+        </div>
+      </section>
+
+      <section className="bg-white/70 py-16">
+        <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 sm:px-6 lg:grid-cols-2">
+          <Image
+            src="/personajes/verde-pulgar.jpg"
+            alt="Verde con el pulgar arriba, listo para jugar y salir al jardín"
+            width={617}
+            height={828}
+            className="mx-auto h-auto w-full max-w-sm rounded-3xl bg-[#F6E4CC]"
+          />
+          <div>
+            <h2 className="text-3xl font-bold text-brand-blue-dark">
+              Juego, jardín y actividades
+            </h2>
+            <p className="mt-3 leading-relaxed text-foreground/80">
+              Verde presenta el tiempo al aire libre, el juego y la
+              estimulación. Hay contacto con la naturaleza y actividades
+              según la edad, desde los 3 meses hasta los 4 años.
+            </p>
+          </div>
+        </div>
+        <div className="mx-auto mt-12 grid max-w-6xl items-center gap-8 px-4 sm:px-6 lg:grid-cols-2">
+          <Image
+            src="/personajes/rosa-purpura.jpg"
+            alt="Rosa junto a Púrpura. Púrpura mide el 73% de la altura de Rosa."
+            width={775}
+            height={704}
+            className="order-1 mx-auto h-auto w-full max-w-md rounded-3xl bg-[#F6E4CC] lg:order-2"
+          />
+          <div className="order-2 lg:order-1">
+            <h2 className="text-3xl font-bold text-brand-blue-dark">
+              Bebés y bienvenida
+            </h2>
+            <p className="mt-3 leading-relaxed text-foreground/80">
+              Rosa da la bienvenida y Púrpura acompaña a los más pequeños.{" "}
+              {EDAD_ATENCION} El cuidado y la alimentación se adaptan a cada
+              niño.
+            </p>
+            <a
+              href="#contacto"
+              className="mt-4 inline-flex font-extrabold text-brand-blue-dark underline underline-offset-2"
+            >
+              Escríbenos o llámanos
+            </a>
+          </div>
+        </div>
+      </section>
+
       <section
         id="servicios"
-        className="mx-auto max-w-6xl scroll-mt-24 px-3 py-16 sm:px-6"
+        className="mx-auto max-w-6xl scroll-mt-24 px-4 py-16 sm:px-6"
       >
         <h2 className="text-center text-3xl font-black text-brand-blue-dark">
           Nuestros servicios
         </h2>
-        <p className="mx-auto mt-3 max-w-2xl text-center text-foreground/70">
+        <p className="mx-auto mt-3 max-w-2xl text-center text-foreground/80">
           Cuidado integral pensado para el desarrollo y bienestar de cada
           niño.
         </p>
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {servicios.map(({ titulo, detalle, Icon }) => (
-            <div
-              key={titulo}
-              className="glass rounded-2xl p-6 transition-transform hover:-translate-y-1"
-            >
+            <div key={titulo} className="glass rounded-2xl p-6">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-blue/10 text-brand-blue-dark">
-                <Icon className="h-6 w-6" strokeWidth={2} />
+                <Icon className="h-6 w-6" strokeWidth={2} aria-hidden="true" />
               </div>
               <h3 className="mt-4 font-extrabold text-brand-blue-dark">
                 {titulo}
               </h3>
-              <p className="mt-2 text-sm text-foreground/70">{detalle}</p>
+              <p className="mt-2 text-sm leading-relaxed text-foreground/80">
+                {detalle}
+              </p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Horarios: 100% de ancho */}
-      <section id="horarios" className="glass w-full scroll-mt-24 py-16">
+      <section id="horarios" className="w-full scroll-mt-24 bg-white/70 py-16">
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
           <h2 className="text-3xl font-black text-brand-blue-dark">
             Horarios de atención
           </h2>
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            {horarios.map((h) => (
-              <div key={h.dia} className="glass-strong rounded-2xl p-6">
+            {HORARIOS.map((horario) => (
+              <div key={horario.dia} className="glass-strong rounded-2xl p-6">
                 <p className="font-extrabold text-brand-green-dark">
-                  {h.dia}
+                  {horario.dia}
                 </p>
                 <p className="mt-1 text-lg font-bold text-brand-blue-dark">
-                  {h.horas}
+                  {horario.horas}
                 </p>
               </div>
             ))}
           </div>
-          <p className="mt-6 text-sm text-foreground/60">
+          <p className="mt-6 text-sm text-foreground/80">
             Contamos con horarios flexibles adaptados a las necesidades de
             cada familia. Pregunta por planes de medio tiempo y tiempo
             completo.
@@ -172,138 +348,117 @@ export default async function HomePage({
         </div>
       </section>
 
-      {/* Instalaciones / fotos */}
       <section
         id="instalaciones"
-        className="mx-auto max-w-6xl scroll-mt-24 px-3 py-16 sm:px-6"
+        className="mx-auto max-w-6xl scroll-mt-24 px-4 py-16 sm:px-6"
       >
         <h2 className="text-center text-3xl font-black text-brand-blue-dark">
           Nuestras instalaciones
         </h2>
-        <p className="mx-auto mt-3 max-w-2xl text-center text-foreground/70">
+        <p className="mx-auto mt-3 max-w-2xl text-center text-foreground/80">
           Espacios seguros y diseñados para niños: jardín, sala de juegos,
           cocina, baños adaptados, aire acondicionado y estacionamiento.
         </p>
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className="glass flex aspect-square flex-col items-center justify-center gap-2 rounded-2xl text-brand-blue-dark/50"
-            >
-              <ImageIcon className="h-8 w-8" strokeWidth={1.5} />
-              <span className="text-sm font-bold">Foto próximamente</span>
-            </div>
-          ))}
-        </div>
-        <p className="mt-4 text-center text-xs text-foreground/50">
-          * Reemplaza estas tarjetas con fotos reales del local en{" "}
-          <code>public/images/instalaciones</code>.
-        </p>
+        {fotos.length > 0 ? (
+          <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {fotos.map((foto) => (
+              <li key={foto.src} className="overflow-hidden rounded-2xl">
+                <div className="relative aspect-[4/3]">
+                  <Image
+                    src={foto.src}
+                    alt={foto.alt}
+                    fill
+                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                    className="object-cover"
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {espacios.map(({ titulo, detalle, Icon }) => (
+              <li key={titulo} className="glass rounded-2xl p-5">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-green/25 text-brand-green-dark">
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <h3 className="font-extrabold text-brand-blue-dark">{titulo}</h3>
+                </div>
+                <p className="mt-3 text-sm leading-relaxed text-foreground/80">
+                  {detalle}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
-      {/* Ubicación + Contacto: 100% de ancho */}
-      <section id="ubicacion" className="glass w-full scroll-mt-24 py-16">
+      <section id="ubicacion" className="w-full scroll-mt-24 bg-white/70 py-16">
         <div className="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 md:grid-cols-2">
           <div>
             <h2 className="text-3xl font-black text-brand-blue-dark">
               Ubicación
             </h2>
-            <p className="mt-3 text-foreground/70">
-              Av. Kohunlich 210, SM 50, C.P. 77533, Cancún, Quintana Roo.
-            </p>
-            <div className="glass-strong mt-6 overflow-hidden rounded-2xl p-2">
+            <p className="mt-3 text-foreground/80">{DIRECCION_LINEA}</p>
+            <div className="mt-6 overflow-hidden rounded-2xl border border-[#5c6f68]/30 bg-white">
               <iframe
-                title="Ubicación Biodiversión"
+                title="Mapa de Biodiversión en Av. Kohunlich 210, Cancún"
                 width="100%"
                 height="300"
                 loading="lazy"
-                className="rounded-xl"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="block h-[280px] w-full sm:h-[320px]"
                 style={{ border: 0 }}
-                src="https://www.google.com/maps?q=Av.+Kohunlich+210,+SM+50,+77533+Canc%C3%BAn,+Q.R.&output=embed"
+                src={MAPS_EMBED}
               />
             </div>
+            <a
+              href={MAPS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-flex font-extrabold text-brand-blue-dark underline-offset-2 hover:underline"
+            >
+              Cómo llegar en Google Maps
+            </a>
           </div>
           <div id="contacto" className="scroll-mt-24">
             <h2 className="text-3xl font-black text-brand-blue-dark">
               Contacto
             </h2>
             <ul className="mt-4 space-y-3 text-foreground/80">
+              {TELEFONOS.map((telefono) => (
+                <li key={telefono.tel} className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-brand-blue-dark" aria-hidden="true" />
+                  <a href={telefono.tel} className="font-bold hover:underline">
+                    {telefono.display}
+                  </a>
+                </li>
+              ))}
               <li className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-brand-blue-dark" />
-                <a href="tel:+529981290100" className="font-bold hover:underline">
-                  998 129 0100
+                <WhatsAppIcon className="h-4 w-4 text-brand-blue-dark" />
+                <a
+                  href={WHATSAPP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold hover:underline"
+                >
+                  WhatsApp
                 </a>
               </li>
               <li className="flex items-center gap-2">
                 <FacebookIcon className="h-4 w-4 text-brand-blue-dark" />
                 <a
-                  href="https://www.facebook.com/biodiversion"
+                  href={FACEBOOK_URL}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   className="font-bold hover:underline"
                 >
                   facebook.com/biodiversion
                 </a>
               </li>
             </ul>
-            {contacto === "enviado" && (
-              <p className="mt-6 rounded-2xl bg-brand-green/15 px-4 py-3 text-center text-sm font-bold text-brand-green-dark">
-                ¡Gracias! Recibimos tu mensaje y te contactaremos pronto.
-              </p>
-            )}
-            {contacto === "error" && (
-              <p className="mt-6 rounded-2xl bg-red-100 px-4 py-3 text-center text-sm font-bold text-red-700">
-                No se pudo enviar tu mensaje. Intenta de nuevo o escríbenos
-                por WhatsApp/teléfono.
-              </p>
-            )}
-            <form
-              action={enviarMensajeContacto}
-              className="glass-strong mt-6 space-y-4 rounded-2xl p-6"
-            >
-              <div>
-                <label className="text-sm font-bold text-brand-blue-dark">
-                  Nombre
-                </label>
-                <input
-                  type="text"
-                  name="nombre"
-                  required
-                  className="mt-1 w-full rounded-lg border border-black/10 bg-white/70 px-3 py-2"
-                  placeholder="Tu nombre"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-bold text-brand-blue-dark">
-                  Teléfono o correo
-                </label>
-                <input
-                  type="text"
-                  name="contacto"
-                  required
-                  className="mt-1 w-full rounded-lg border border-black/10 bg-white/70 px-3 py-2"
-                  placeholder="¿Cómo te contactamos?"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-bold text-brand-blue-dark">
-                  Mensaje
-                </label>
-                <textarea
-                  name="mensaje"
-                  rows={3}
-                  required
-                  className="mt-1 w-full rounded-lg border border-black/10 bg-white/70 px-3 py-2"
-                  placeholder="Cuéntanos sobre tu hijo/a y qué información necesitas"
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full rounded-full bg-brand-green py-3 font-extrabold text-white transition-transform hover:scale-105"
-              >
-                Enviar
-              </button>
-            </form>
+            <FormularioContacto />
           </div>
         </div>
       </section>

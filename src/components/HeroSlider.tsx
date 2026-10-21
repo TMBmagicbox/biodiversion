@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, Baby } from "lucide-react";
+import { ChevronLeft, ChevronRight, Baby, Pause, Play } from "lucide-react";
+import { HERO_DESCRIPCION, textoEdadActualizado } from "@/lib/site";
 
 export type HeroSlide = {
   id: string;
@@ -19,8 +20,7 @@ const SLIDE_POR_DEFECTO: HeroSlide = {
   id: "default",
   titulo:
     "Guardería y estancia infantil en Cancún: un lugar seguro para que tu hijo crezca, aprenda y se divierta",
-  descripcion:
-    "Atendemos bebés desde 45 días de nacidos hasta niños de 4 años, con horarios flexibles, alimentación cuidada y un enfoque educativo conectado con la naturaleza.",
+  descripcion: HERO_DESCRIPCION,
   imagen_fondo_url: null,
   imagen_decorativa_url: null,
   logo_url: null,
@@ -29,17 +29,23 @@ const SLIDE_POR_DEFECTO: HeroSlide = {
 };
 
 export default function HeroSlider({ slides }: { slides: HeroSlide[] }) {
-  const data = slides.length ? slides : [SLIDE_POR_DEFECTO];
+  const data = (slides.length ? slides : [SLIDE_POR_DEFECTO]).map((slide) => ({
+    ...slide,
+    descripcion: slide.descripcion
+      ? textoEdadActualizado(slide.descripcion)
+      : slide.descripcion,
+  }));
   const [activo, setActivo] = useState(0);
   const [offset, setOffset] = useState(0);
+  const [pausado, setPausado] = useState(false);
   const seccionRef = useRef<HTMLElement>(null);
 
-  // Autoplay
   useEffect(() => {
-    if (data.length < 2) return;
+    if (pausado || data.length < 2) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const t = setInterval(() => setActivo((i) => (i + 1) % data.length), 6500);
     return () => clearInterval(t);
-  }, [data.length]);
+  }, [data.length, pausado]);
 
   // Parallax: el fondo y la imagen decorativa se mueven a distinta
   // velocidad que el scroll de la página, para dar sensación de profundidad.
@@ -77,6 +83,7 @@ export default function HeroSlider({ slides }: { slides: HeroSlide[] }) {
                 alt=""
                 fill
                 priority={i === 0}
+                sizes="100vw"
                 className="object-cover"
               />
             ) : (
@@ -89,7 +96,7 @@ export default function HeroSlider({ slides }: { slides: HeroSlide[] }) {
               </div>
             )}
           </div>
-          <div className="absolute inset-0 bg-gradient-to-t from-brand-blue-dark/80 via-brand-blue-dark/40 to-brand-blue-dark/20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-brand-blue-dark/90 via-brand-blue-dark/60 to-brand-blue-dark/35" />
 
           {/* Imagen decorativa (PNG, aparte del fondo): se mueve más rápido
            * que el fondo para que el banner se sienta dinámico/con capas. */}
@@ -103,6 +110,7 @@ export default function HeroSlider({ slides }: { slides: HeroSlide[] }) {
                 alt=""
                 width={420}
                 height={420}
+                sizes="(min-width: 1024px) 420px, 340px"
                 className="h-auto w-full drop-shadow-2xl"
               />
             </div>
@@ -115,7 +123,7 @@ export default function HeroSlider({ slides }: { slides: HeroSlide[] }) {
         {data[activo].logo_url && (
           <Image
             src={data[activo].logo_url}
-            alt="Logo"
+            alt="Biodiversión"
             width={140}
             height={60}
             className="mb-6 h-12 w-auto drop-shadow-lg"
@@ -124,24 +132,24 @@ export default function HeroSlider({ slides }: { slides: HeroSlide[] }) {
         <p className="inline-block w-fit rounded-full bg-white/15 px-4 py-1 text-sm font-bold text-white backdrop-blur">
           Guardería en Cancún · SM 50
         </p>
-        <h1 className="mt-4 max-w-2xl text-4xl font-black leading-tight text-white sm:text-5xl">
+        <h1 className="mt-4 max-w-2xl text-3xl font-black leading-tight text-white [text-shadow:0_2px_16px_rgba(0,20,30,0.55)] sm:text-5xl">
           {data[activo].titulo}
         </h1>
         {data[activo].descripcion && (
-          <p className="mt-5 max-w-xl text-lg text-white/90">
+          <p className="mt-5 max-w-xl text-base text-white [text-shadow:0_1px_10px_rgba(0,20,30,0.45)] sm:text-lg">
             {data[activo].descripcion}
           </p>
         )}
-        <div className="mt-8 flex flex-wrap gap-4">
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <a
             href={data[activo].url_boton || "#contacto"}
-            className="rounded-full bg-brand-green px-6 py-3 font-extrabold text-white shadow-md transition-transform hover:scale-105"
+            className="rounded-full bg-brand-green px-6 py-3 text-center font-extrabold text-[#14240a] shadow-md"
           >
             {data[activo].texto_boton || "Agenda una visita"}
           </a>
           <a
             href="#servicios"
-            className="rounded-full border-2 border-white/70 px-6 py-3 font-extrabold text-white backdrop-blur transition-transform hover:scale-105"
+            className="rounded-full border-2 border-white bg-brand-blue-dark/40 px-6 py-3 text-center font-extrabold text-white"
           >
             Ver servicios
           </a>
@@ -153,7 +161,7 @@ export default function HeroSlider({ slides }: { slides: HeroSlide[] }) {
         <>
           <button
             type="button"
-            aria-label="Slide anterior"
+            aria-label="Diapositiva anterior"
             onClick={() => setActivo((i) => (i - 1 + data.length) % data.length)}
             className="absolute left-3 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/15 p-2 text-white backdrop-blur transition-colors hover:bg-white/25 sm:flex"
           >
@@ -161,18 +169,27 @@ export default function HeroSlider({ slides }: { slides: HeroSlide[] }) {
           </button>
           <button
             type="button"
-            aria-label="Siguiente slide"
+            aria-label="Diapositiva siguiente"
             onClick={() => setActivo((i) => (i + 1) % data.length)}
             className="absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/15 p-2 text-white backdrop-blur transition-colors hover:bg-white/25 sm:flex"
           >
             <ChevronRight className="h-6 w-6" />
           </button>
-          <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 gap-2">
+          <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-2">
+            <button
+              type="button"
+              aria-pressed={pausado}
+              aria-label={pausado ? "Reanudar carrusel" : "Pausar carrusel"}
+              onClick={() => setPausado((valor) => !valor)}
+              className="mr-1 rounded-full bg-brand-blue-dark p-2 text-white"
+            >
+              {pausado ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+            </button>
             {data.map((s, i) => (
               <button
                 key={s.id}
                 type="button"
-                aria-label={`Ir al slide ${i + 1}`}
+                aria-label={`Ir a la diapositiva ${i + 1}`}
                 onClick={() => setActivo(i)}
                 className={`h-2 rounded-full transition-all ${
                   i === activo ? "w-6 bg-white" : "w-2 bg-white/40"
