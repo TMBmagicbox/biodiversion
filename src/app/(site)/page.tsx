@@ -117,7 +117,7 @@ const espacios = [
 export default async function HomePage() {
   const fotos = await fotosInstalaciones();
 
-  const imagen = `${SITE_URL}/personajes/trio-abrazo.jpg`;
+  const imagen = `${SITE_URL}/personajes/trio-abrazo.png`;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -170,7 +170,7 @@ export default async function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <section className="bg-[#F6E4CC]">
+      <section className="overflow-x-clip bg-[#F6E4CC]">
         <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:py-16">
           <div>
             <p className="inline-block rounded-full bg-white/80 px-4 py-1 text-sm font-bold text-brand-blue-dark">
@@ -212,12 +212,13 @@ export default async function HomePage() {
           </div>
           <div>
             <Image
-              src="/personajes/trio-abrazo.jpg"
-              alt="Rosa, Verde y Púrpura abrazados. Verde mide el 88% de Rosa y Púrpura el 73%."
-              width={1140}
-              height={696}
+              src="/personajes/trio-abrazo.png"
+              alt="Rosa, Verde y Púrpura abrazados"
+              width={966}
+              height={782}
               priority
-              className="h-auto w-full"
+              data-velocidad="0.12"
+              className="personaje-flota h-auto w-full"
             />
             <ul className="mt-4 grid gap-3 sm:grid-cols-3">
               {PERSONAJES.map((personaje) => (
@@ -248,19 +249,24 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="bg-white/70 py-16">
-        <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 sm:px-6 lg:grid-cols-2">
+      <section id="juego" className="scroll-mt-24 py-16">
+        <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 sm:px-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.1fr)]">
           <Image
-            src="/personajes/verde-pulgar.jpg"
-            alt="Verde con el pulgar arriba, listo para jugar y salir al jardín"
-            width={617}
-            height={828}
-            className="mx-auto h-auto w-full max-w-sm rounded-3xl bg-[#F6E4CC]"
+            src="/personajes/verde-senalando.png"
+            alt="Verde señalando el juego y las actividades"
+            width={628}
+            height={723}
+            data-velocidad="0.28"
+            className="personaje-flota mx-auto h-auto max-h-48 w-auto sm:max-h-80"
           />
           <div>
             <h2 className="text-3xl font-bold text-brand-blue-dark">
               Juego, jardín y actividades
             </h2>
+            <p className="burbuja burbuja-verde mt-4 text-sm">
+              <span className="font-extrabold text-brand-blue-dark">Verde. </span>
+              En el jardín jugamos, exploramos y aprendemos juntos.
+            </p>
             <p className="mt-3 leading-relaxed text-foreground/80">
               Verde presenta el tiempo al aire libre, el juego y la
               estimulación. Hay contacto con la naturaleza y actividades
@@ -268,18 +274,48 @@ export default async function HomePage() {
             </p>
           </div>
         </div>
-        <div className="mx-auto mt-12 grid max-w-6xl items-center gap-8 px-4 sm:px-6 lg:grid-cols-2">
+      </section>
+
+      <div className="asomo-purpura" aria-hidden="true">
+        <Image
+          src="/personajes/purpura-asomando.png"
+          alt=""
+          width={553}
+          height={455}
+          data-velocidad="0.5"
+        />
+      </div>
+
+      <section id="bebes" className="tapa-purpura scroll-mt-24 pb-16">
+        <div className="relative mx-auto grid max-w-6xl items-center gap-8 px-4 pt-8 sm:px-6 lg:grid-cols-2">
           <Image
-            src="/personajes/rosa-purpura.jpg"
-            alt="Rosa junto a Púrpura. Púrpura mide el 73% de la altura de Rosa."
-            width={775}
-            height={704}
-            className="order-1 mx-auto h-auto w-full max-w-md rounded-3xl bg-[#F6E4CC] lg:order-2"
+            src="/personajes/rosa-purpura.png"
+            alt="Rosa junto a Púrpura"
+            width={948}
+            height={760}
+            data-velocidad="0.18"
+            className="personaje-flota order-1 mx-auto h-auto w-full max-w-md lg:order-2"
           />
-          <div className="order-2 lg:order-1">
-            <h2 className="text-3xl font-bold text-brand-blue-dark">
-              Bebés y bienvenida
-            </h2>
+          <div className="relative z-10 order-2 lg:order-1">
+            <div className="marco-asomo mb-4 min-h-[4.8rem] md:min-h-[8.5rem]">
+              <div className="asomo-lado" aria-hidden="true">
+                <Image
+                  src="/personajes/verde-asomando.png"
+                  alt=""
+                  width={512}
+                  height={766}
+                  data-velocidad="0.4"
+                />
+              </div>
+              <h2 className="con-margen-asomo text-3xl font-bold text-brand-blue-dark">
+                Bebés y bienvenida
+              </h2>
+            </div>
+            <p className="burbuja burbuja-purpura text-sm">
+              <span className="font-extrabold text-brand-blue-dark">Púrpura. </span>
+              Los bebés, desde los 3 meses, tienen cuidado cercano y menús
+              según su edad.
+            </p>
             <p className="mt-3 leading-relaxed text-foreground/80">
               Rosa da la bienvenida y Púrpura acompaña a los más pequeños.{" "}
               {EDAD_ATENCION} El cuidado y la alimentación se adaptan a cada
@@ -287,7 +323,7 @@ export default async function HomePage() {
             </p>
             <a
               href="#contacto"
-              className="mt-4 inline-flex font-extrabold text-brand-blue-dark underline underline-offset-2"
+              className="relative z-10 mt-4 inline-flex font-extrabold text-brand-blue-dark underline underline-offset-2"
             >
               Escríbenos o llámanos
             </a>
@@ -423,9 +459,34 @@ export default async function HomePage() {
             </a>
           </div>
           <div id="contacto" className="scroll-mt-24">
-            <h2 className="text-3xl font-black text-brand-blue-dark">
-              Contacto
-            </h2>
+            <div className="marco-asomo sm:overflow-visible">
+              <div className="asomo-lado sm:hidden" aria-hidden="true">
+                <Image
+                  src="/personajes/rosa-asomando.png"
+                  alt=""
+                  width={342}
+                  height={828}
+                  data-velocidad="0.32"
+                />
+              </div>
+              <div className="con-margen-asomo solo-movil min-h-[4.8rem] sm:grid sm:min-h-0 sm:grid-cols-[9rem_minmax(0,1fr)] sm:items-end sm:gap-4">
+                <Image
+                  src="/personajes/rosa-saludando.png"
+                  alt="Rosa saludando"
+                  width={679}
+                  height={784}
+                  data-velocidad="0.22"
+                  className="personaje-flota mb-3 hidden h-auto w-auto sm:mb-0 sm:block sm:max-h-52"
+                />
+                <h2 className="text-3xl font-black text-brand-blue-dark">
+                  Contacto
+                </h2>
+              </div>
+            </div>
+            <p className="burbuja burbuja-rosa mt-4 text-sm">
+              <span className="font-extrabold text-brand-blue-dark">Rosa. </span>
+              ¡Hola! Si quieres visitarnos, aquí te orientamos.
+            </p>
             <ul className="mt-4 space-y-3 text-foreground/80">
               {TELEFONOS.map((telefono) => (
                 <li key={telefono.tel} className="flex items-center gap-2">

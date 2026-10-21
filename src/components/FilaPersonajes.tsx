@@ -9,17 +9,18 @@ export default function FilaPersonajes({
   conTexto?: boolean;
 }) {
   const fila = (
-    <ul className={`fila-personajes ${compacta ? "tam-sm" : ""}`}>
-      {PERSONAJES.map((personaje, indice) => (
+    <ul
+      className={`fila-personajes ${compacta ? "tam-sm" : ""}`}
+      data-velocidad={compacta ? undefined : "0.16"}
+    >
+      {PERSONAJES.map((personaje) => (
         <li key={personaje.id}>
           <Image
             src={personaje.src}
             alt={personaje.alt}
             width={personaje.width}
             height={personaje.height}
-            className={`${personaje.clase} flotar object-contain object-bottom ${
-              indice === 1 ? "flotar-tarde" : ""
-            } ${indice === 2 ? "flotar-mas" : ""}`}
+            className={`${personaje.clase} object-contain object-bottom`}
           />
         </li>
       ))}

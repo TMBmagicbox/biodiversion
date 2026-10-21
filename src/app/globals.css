@@ -93,8 +93,74 @@ body {
 }
 
 .alto-rosa { height: var(--alto-rosa); width: auto; }
-.alto-verde { height: calc(var(--alto-rosa) * 0.88); width: auto; }
-.alto-purpura { height: calc(var(--alto-rosa) * 0.73); width: auto; }
+.alto-verde { height: calc(var(--alto-rosa) * 91 / 103); width: auto; }
+.alto-purpura { height: calc(var(--alto-rosa) * 75 / 103); width: auto; }
+
+.fila-personajes {
+  transform: translate3d(0, var(--y, 0px), 0);
+}
+
+.asomo-purpura {
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  line-height: 0;
+}
+
+.asomo-purpura img {
+  height: 6.4rem;
+  width: auto;
+  max-width: none;
+  transform: translate3d(0, var(--y, 0px), 0);
+}
+
+.tapa-purpura {
+  position: relative;
+  z-index: 2;
+  margin-top: -2px;
+  background: #fffdf8;
+}
+
+.marco-asomo {
+  position: relative;
+  overflow: hidden;
+}
+
+.asomo-lado {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 2.6rem;
+  height: 4.6rem;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.asomo-lado img {
+  height: 100%;
+  width: auto;
+  max-width: none;
+  transform: translate3d(0, var(--y, 0px), 0);
+}
+
+.con-margen-asomo {
+  padding-left: 4.25rem;
+}
+
+.personaje-flota {
+  transform: translate3d(0, var(--y, 0px), 0);
+}
+
+@media (min-width: 640px) {
+  .con-margen-asomo.solo-movil { padding-left: 0; }
+}
+
+@media (min-width: 768px) {
+  .asomo-purpura img { height: 8.5rem; }
+  .asomo-lado { width: 4.8rem; height: 8.5rem; }
+  .con-margen-asomo { padding-left: 6.75rem; }
+  .con-margen-asomo.solo-movil { padding-left: 0; }
+}
 
 .fila-personajes.tam-sm { --alto-rosa: 7rem; }
 

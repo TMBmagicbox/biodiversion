@@ -1,12 +1,54 @@
 # Personajes de Biodiversión
 
-Tres amigos imaginarios acompañan el sitio. El logo, el teléfono, la dirección y los horarios del negocio no cambian por ellos. No llevan emojis.
+Regla: nadie más genera, redibuja, regenera ni retoca a Rosa, Verde o Púrpura. Si hace falta otra pose, se describe y la crea Diego. Sobre sus archivos solo se recorta, se quita el fondo y se comprime.
 
-La ficha vigente es `public/personajes/ficha-tecnica-corregida.jpg`. Cualquier nota anterior de “unidades relativas”, de “20 m / 25 m / 15 m” o de “Rosa y Verde a la misma altura” queda anulada.
+## Originales de Diego
 
-## Medidas reales
+En `personajes/originales/`, tal como llegaron.
 
-Alto / ancho de frente / profundidad de lado.
+| Archivo | Uso |
+| --- | --- |
+| `ficha-tecnica.jpg` | Vistas de frente. |
+| `trio-abrazo.jpg` | Los tres abrazados. Hero. |
+| `rosa-purpura.jpg` | Rosa y Púrpura juntas. Bebés y bienvenida. |
+| `verde-pulgar.jpg` | Verde con el pulgar arriba. Se conserva en transparente; el gesto de señalar del sitio usa la pose aprobada `verde-senalando`. |
+| `purpura-asomando-borde.jpg` | Púrpura asomando ojos, antenas y manitas. |
+| `rosa-saludando.jpg` | Rosa de cuerpo completo saludando. Contacto, desde 640 px. |
+| `rosa-asomando-lado.jpg` | Rosa detrás de un borde vertical. Contacto en pantallas angostas. |
+| `verde-senalando.jpg` | Verde señalando. Juego y actividades. |
+| `verde-asomando-lado-pulgar.jpg` | Verde asomado con pulgar arriba. Borde de bebés y bienvenida. |
+
+## Imágenes del sitio
+
+Fondo transparente (recorte del fondo blanco o de la cuadrícula, sin cambiar el dibujo). PNG con alfa.
+
+| Pública | Sale de |
+| --- | --- |
+| `public/personajes/rosa.png` | Frente de Rosa en la ficha. |
+| `public/personajes/verde.png` | Frente de Verde en la ficha. |
+| `public/personajes/purpura.png` | Frente de Púrpura en la ficha. |
+| `public/personajes/trio-abrazo.png` | `trio-abrazo.jpg` |
+| `public/personajes/rosa-purpura.png` | `rosa-purpura.jpg` |
+| `public/personajes/verde-pulgar.png` | `verde-pulgar.jpg` |
+| `public/personajes/purpura-asomando.png` | `purpura-asomando-borde.jpg`, sin la franja blanca. El borde lo pone la sección. |
+| `public/personajes/rosa-saludando.png` | `rosa-saludando.jpg` |
+| `public/personajes/rosa-asomando.png` | `rosa-asomando-lado.jpg`, sin la pared blanca. |
+| `public/personajes/verde-senalando.png` | `verde-senalando.jpg` |
+| `public/personajes/verde-asomando.png` | `verde-asomando-lado-pulgar.jpg`, sin la pared blanca. |
+
+## Cómo son
+
+- Rosa: bola de pelo rosa, pestañas, ojos azules, dos colmillitos y tutú amarillo. No tiene pelo largo ni cuerpo de niña. Bienvenida y contacto.
+- Verde: verde lima, gorra azul al revés, orejas naranjas, brazos con rayas naranja y verde. Juego y actividades.
+- Púrpura: morado, antenas de corazón, chupón rosa y colita. Bebés y alimentación.
+
+## Alturas cuando los retratos de frente van juntos
+
+Rosa 103 cm, Verde 91 cm, Púrpura 75 cm. En la fila, Verde mide `91/103` de Rosa y Púrpura `75/103`, con los pies alineados. Las fotos de escena y las poses no se estiran para forzar esa relación: cada una se muestra con su encuadre.
+
+La guardería atiende desde los 3 meses hasta los 4 años. Esa frase no es la edad de los personajes.
+
+## Medidas
 
 | Personaje | Edad del personaje | Alto | Ancho de frente | Profundidad de lado |
 | --- | --- | --- | --- | --- |
@@ -14,64 +56,4 @@ Alto / ancho de frente / profundidad de lado.
 | Verde | cerca de 2 años y medio | 91 cm | 70 cm | 62 cm |
 | Púrpura | bebé, cerca de 1 año | 75 cm | 58 cm | 55 cm |
 
-## Proporción cuando aparecen juntos
-
-La altura de referencia es la de Rosa.
-
-- Verde = 88% de la altura de Rosa (91 / 103, aplicado como 88%, no como el cociente crudo).
-- Púrpura = 73% de la altura de Rosa (75 / 103, aplicado como 73%).
-
-En el sitio, la fila usa esas constantes (`0.88` y `0.73`) con las plantas de los pies alineadas. Las fotos compuestas (`trio-abrazo.jpg`, `rosa-purpura.jpg`) ya están armadas con esa relación. No se estiran para igualar alturas.
-
-La edad de cada personaje no es el rango de la guardería. La guardería atiende bebés desde los 3 meses hasta los 4 años.
-
-## Qué no se cambia
-
-- Rosa: peluche rosa, pelo largo despeinado, ojos azules, pestañas largas, cejas finas, boca abierta con dos colmillitos, tutú amarillo de tul, piernas cortas rosas. Amigable, energética, muy habladora. Presenta la bienvenida y el contacto.
-- Verde: peluche verde lima, gorra azul rey hacia atrás, orejas redondas naranjas, brazos con rayas naranja y verde, manos naranjas, sonrisa con colmillitos, ojos verdes. Alegre y travieso. Presenta el juego, el jardín y las actividades.
-- Púrpura: peluche morado, dos antenas con un corazón morado, chupón rosa, colita, ojos azules. Tierna, juguetona y dulce. Presenta el cuidado de los bebés y la alimentación.
-
-Siempre con esos accesorios. No se cambian colores ni proporciones entre una publicación y otra.
-
-## Color de acento
-
-Muestreado de los retratos. Sirve para bordes y fondos, no para texto pequeño.
-
-| Uso | HEX |
-| --- | --- |
-| Peluche de Rosa | `#DB8B7B` |
-| Tutú amarillo | `#F1BD4B` |
-| Peluche de Verde | `#A0B030` |
-| Gorra azul | `#1B4DA2` |
-| Naranja (orejas, manos, rayas) | `#DC6C1D` |
-| Peluche de Púrpura | `#816188` |
-| Chupón | `#C495A9` |
-| Crema de las tarjetas | `#F6E4CC` |
-
-El texto sigue en `#1F2A24` o azul oscuro de la marca. El botón lima lleva tinta `#14240A`.
-
-## Archivos
-
-| Archivo | Uso |
-| --- | --- |
-| `public/personajes/rosa.jpg` | Retrato de Rosa |
-| `public/personajes/verde.jpg` | Retrato de Verde |
-| `public/personajes/purpura.jpg` | Retrato de Púrpura |
-| `public/personajes/verde-pulgar.jpg` | Verde presenta juego y naturaleza |
-| `public/personajes/rosa-purpura.jpg` | Rosa y Púrpura juntas, Púrpura al 73% |
-| `public/personajes/trio-abrazo.jpg` | Los tres juntos: 100% / 88% / 73% |
-| `public/personajes/ficha-tecnica-corregida.jpg` | Ficha de medidas aprobada |
-
-Estos retratos se reconstruyeron a partir de la ficha porque el arte final con esos nombres no llegó como archivo. Diego puede sustituir los JPG conservando el nombre. No hay foto real de la fachada en el repositorio; no se inventó `fachada.jpg`.
-
-## Prompts maestros
-
-Estilo común: peluche 3D suave, fondo crema `#F6E4CC`, luz suave, sin texto, sin emojis, sin cambiar accesorios ni colores.
-
-Rosa: peluche rosa de unos 4 años, pelo largo despeinado, ojos azules con pestañas largas, cejas finas, boca abierta con dos colmillitos, tutú amarillo de tul, piernas cortas rosas, expresión amigable y enérgica.
-
-Verde: peluche verde lima de unos 2 años y medio, gorra azul rey hacia atrás, orejas redondas naranjas, brazos a rayas naranja y verde, manos naranjas, ojos verdes, sonrisa con colmillitos, expresión alegre y traviesa. En `verde-pulgar.jpg` levanta el pulgar.
-
-Púrpura: peluche morado bebé, dos antenas con un corazón morado, chupón rosa, colita, ojos azules, expresión tierna.
-
-Cuando salen juntos, Verde mide 88% de Rosa y Púrpura mide 73%, con los pies en la misma línea.
+No se usan las cotas “20 m / 25 m / 15 m” de la ficha ni la nota de “misma altura”.
