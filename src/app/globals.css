@@ -151,16 +151,16 @@ body {
   transform: translate3d(0, var(--y, 0px), 0);
 }
 
-/* El abrazo llega cortado al borde inferior del archivo. La máscara lo funde con la crema. */
+/* El abrazo llega cortado en el archivo. La máscara funde ese borde con la crema. */
 .hero-trio {
   -webkit-mask-image: radial-gradient(
-    ellipse 100% 96% at 50% 46%,
-    #000 76%,
+    ellipse 58% 52% at 50% 42%,
+    #000 70%,
     transparent 100%
   );
   mask-image: radial-gradient(
-    ellipse 100% 96% at 50% 46%,
-    #000 76%,
+    ellipse 58% 52% at 50% 42%,
+    #000 70%,
     transparent 100%
   );
 }
