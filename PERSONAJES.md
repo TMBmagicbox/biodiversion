@@ -8,8 +8,12 @@ En `personajes/originales/`, tal como llegaron.
 
 | Archivo | Uso |
 | --- | --- |
-| `ficha-tecnica.jpg` | Vistas de frente. |
+| `frente-rosa.jpg` | Vista de frente de Rosa, en alta resolución. |
+| `frente-verde.jpg` | Vista de frente de Verde, en alta resolución. |
+| `frente-purpura.jpg` | Vista de frente de Púrpura, en alta resolución. |
+| `ficha-tecnica.jpg` | Referencia de medidas. Las vistas públicas ya no salen de este recorte. |
 | `trio-abrazo.jpg` | Los tres abrazados. Hero. |
+| `fachada.jpg` | Foto real del local. Instalaciones y ubicación. |
 | `rosa-purpura.jpg` | Rosa y Púrpura juntas. Bebés y bienvenida. |
 | `verde-pulgar.jpg` | Verde con el pulgar arriba. Se conserva en transparente; el gesto de señalar del sitio usa la pose aprobada `verde-senalando`. |
 | `purpura-asomando-borde.jpg` | Púrpura asomando ojos, antenas y manitas. |
@@ -24,10 +28,11 @@ Fondo transparente (recorte del fondo blanco o de la cuadrícula, sin cambiar el
 
 | Pública | Sale de |
 | --- | --- |
-| `public/personajes/rosa.png` | Frente de Rosa en la ficha. |
-| `public/personajes/verde.png` | Frente de Verde en la ficha. |
-| `public/personajes/purpura.png` | Frente de Púrpura en la ficha. |
-| `public/personajes/trio-abrazo.png` | `trio-abrazo.jpg` |
+| `public/personajes/rosa.png` | `frente-rosa.jpg`, sin fondo. |
+| `public/personajes/verde.png` | `frente-verde.jpg`, sin fondo. |
+| `public/personajes/purpura.png` | `frente-purpura.jpg`, sin fondo. |
+| `public/personajes/trio-abrazo.png` | `trio-abrazo.jpg`. El borde inferior, que en el archivo llega cortado, se funde con el fondo. |
+| `public/images/fachada.jpg` | `fachada.jpg` |
 | `public/personajes/rosa-purpura.png` | `rosa-purpura.jpg` |
 | `public/personajes/verde-pulgar.png` | `verde-pulgar.jpg` |
 | `public/personajes/purpura-asomando.png` | `purpura-asomando-borde.jpg`, sin la franja blanca. El borde lo pone la sección. |

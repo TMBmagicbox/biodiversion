@@ -214,11 +214,11 @@ export default async function HomePage() {
             <Image
               src="/personajes/trio-abrazo.png"
               alt="Rosa, Verde y Púrpura abrazados"
-              width={966}
-              height={782}
+              width={1373}
+              height={1100}
               priority
               data-velocidad="0.12"
-              className="personaje-flota h-auto w-full"
+              className="hero-trio personaje-flota h-auto w-full"
             />
             <ul className="mt-4 grid gap-3 sm:grid-cols-3">
               {PERSONAJES.map((personaje) => (
@@ -395,6 +395,15 @@ export default async function HomePage() {
           Espacios seguros y diseñados para niños: jardín, sala de juegos,
           cocina, baños adaptados, aire acondicionado y estacionamiento.
         </p>
+        <figure className="mx-auto mt-10 max-w-4xl overflow-hidden rounded-3xl">
+          <Image
+            src="/images/fachada.jpg"
+            alt="Fachada de Biodiversión, estancia infantil en Av. Kohunlich, Cancún"
+            width={1500}
+            height={1001}
+            className="h-auto w-full"
+          />
+        </figure>
         {fotos.length > 0 ? (
           <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {fotos.map((foto) => (
@@ -437,6 +446,15 @@ export default async function HomePage() {
               Ubicación
             </h2>
             <p className="mt-3 text-foreground/80">{DIRECCION_LINEA}</p>
+            <figure className="mt-6 overflow-hidden rounded-2xl">
+              <Image
+                src="/images/fachada.jpg"
+                alt="Fachada de Biodiversión en Av. Kohunlich 210, Cancún"
+                width={1500}
+                height={1001}
+                className="h-auto w-full"
+              />
+            </figure>
             <div className="mt-6 overflow-hidden rounded-2xl border border-[#5c6f68]/30 bg-white">
               <iframe
                 title="Mapa de Biodiversión en Av. Kohunlich 210, Cancún"

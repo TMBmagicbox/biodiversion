@@ -151,6 +151,20 @@ body {
   transform: translate3d(0, var(--y, 0px), 0);
 }
 
+/* El abrazo llega cortado al borde inferior del archivo. La máscara lo funde con la crema. */
+.hero-trio {
+  -webkit-mask-image: radial-gradient(
+    ellipse 100% 96% at 50% 46%,
+    #000 76%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    ellipse 100% 96% at 50% 46%,
+    #000 76%,
+    transparent 100%
+  );
+}
+
 @media (min-width: 640px) {
   .con-margen-asomo.solo-movil { padding-left: 0; }
 }
