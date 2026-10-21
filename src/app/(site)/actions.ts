@@ -1,44 +1,60 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { enviarWhatsApp } from "@/lib/whatsapp";
 
-// Número del negocio al que llega el aviso de WhatsApp por cada mensaje
-// nuevo del formulario de contacto. Se puede sobreescribir con la variable
-// de entorno NEGOCIO_WHATSAPP_TO en Vercel; si no está configurada, usa el
-// teléfono público de Biodiversión que ya aparece en la página.
 const NEGOCIO_WHATSAPP_TO = process.env.NEGOCIO_WHATSAPP_TO || "9981290100";
 
-export async function enviarMensajeContacto(formData: FormData) {
-  const nombre = String(formData.get("nombre") || "").trim();
-  const contacto = String(formData.get("contacto") || "").trim();
-  const mensaje = String(formData.get("mensaje") || "").trim();
+export type EstadoContacto = {
+  estado: "idle" | "ok" | "error";
+  mensaje: string;
+};
 
-  if (!nombre || !contacto || !mensaje) {
-    redirect("/?contacto=error#contacto");
+const MENSAJE_OK =
+  "Gracias. Recibimos tu mensaje y te contactaremos pronto.";
+const MENSAJE_ERROR =
+  "No se pudo enviar tu mensaje. Intenta de nuevo, escríbenos por WhatsApp o llama al 998 129 0100 o al 998 372 4752.";
+
+export async function enviarMensajeContacto(
+  _previo: EstadoContacto,
+  formData: FormData,
+): Promise<EstadoContacto> {
+  if (String(formData.get("empresa") || "").trim()) {
+    return { estado: "ok", mensaje: MENSAJE_OK };
   }
 
-  // Se usa la service role porque este formulario lo llena cualquier
-  // visitante sin sesión (RLS solo deja leer/editar al personal logueado).
-  const supabase = createAdminClient();
-  const { error } = await supabase.from("mensajes_contacto").insert({
-    nombre,
-    contacto,
-    mensaje,
-  });
+  const nombre = String(formData.get("nombre") || "").trim().slice(0, 80);
+  const contacto = String(formData.get("contacto") || "").trim().slice(0, 120);
+  const mensaje = String(formData.get("mensaje") || "").trim().slice(0, 2000);
 
-  if (error) {
-    console.error("No se pudo guardar el mensaje de contacto:", error.message);
-    redirect("/?contacto=error#contacto");
+  if (nombre.length < 2 || contacto.length < 5 || mensaje.length < 8) {
+    return {
+      estado: "error",
+      mensaje: "Revisa que el nombre, el contacto y el mensaje estén completos.",
+    };
   }
 
-  // Aviso inmediato por WhatsApp al negocio (no bloquea si falla o si
-  // WhatsApp todavía no está configurado en este entorno).
+  try {
+    const supabase = createAdminClient();
+    const { error } = await supabase.from("mensajes_contacto").insert({
+      nombre,
+      contacto,
+      mensaje,
+    });
+
+    if (error) {
+      console.error("No se pudo guardar el mensaje de contacto:", error.message);
+      return { estado: "error", mensaje: MENSAJE_ERROR };
+    }
+  } catch (error) {
+    console.error("Error al guardar el mensaje de contacto:", error);
+    return { estado: "error", mensaje: MENSAJE_ERROR };
+  }
+
   await enviarWhatsApp(
     NEGOCIO_WHATSAPP_TO,
-    `📩 Nuevo mensaje de contacto en la página web\n\nNombre: ${nombre}\nContacto: ${contacto}\nMensaje: ${mensaje}`,
+    `Nuevo mensaje de contacto en la página web\n\nNombre: ${nombre}\nContacto: ${contacto}\nMensaje: ${mensaje}`,
   );
 
-  redirect("/?contacto=enviado#contacto");
+  return { estado: "ok", mensaje: MENSAJE_OK };
 }

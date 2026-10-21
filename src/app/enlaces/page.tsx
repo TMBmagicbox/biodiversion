@@ -1,17 +1,25 @@
 import type { Metadata } from "next";
+import Image from "next/image";
+import FilaPersonajes from "@/components/FilaPersonajes";
+import { TELEFONOS } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Enlaces",
   description:
     "Sitio web, redes sociales y WhatsApp de Guardería Biodiversión, Cancún.",
+  alternates: { canonical: "/enlaces" },
+  openGraph: {
+    url: "/enlaces",
+    title: "Enlaces | Biodiversión",
+    description:
+      "Sitio web, redes sociales y WhatsApp de Guardería Biodiversión, Cancún.",
+  },
 };
 
 export default function EnlacesPage() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;1,600&display=swap');
-
         .enlaces-root{
           --paper:#eef8fb;
           --paper-deep:#dcebf0;
@@ -24,7 +32,7 @@ export default function EnlacesPage() {
           min-height:100vh;
           margin:0;
           background:var(--paper);
-          font-family:'Nunito', system-ui, sans-serif;
+          font-family:var(--font-nunito), system-ui, sans-serif;
           color:var(--ink);
           display:flex;
           justify-content:center;
@@ -93,7 +101,7 @@ export default function EnlacesPage() {
 
         .enlaces-name{
           margin:14px 0 0;
-          font-family:'Fredoka', sans-serif;
+          font-family:var(--font-fredoka), sans-serif;
           font-weight:700;
           font-size:23px;
           letter-spacing:0.8px;
@@ -123,7 +131,7 @@ export default function EnlacesPage() {
           padding:15px 20px;
           border-radius:999px;
           text-decoration:none;
-          font-family:'Fredoka',sans-serif;
+          font-family:var(--font-fredoka), sans-serif;
           font-weight:600;
           font-size:16px;
           border:1.5px solid transparent;
@@ -153,7 +161,7 @@ export default function EnlacesPage() {
           gap:14px;
           width:100%;
           padding:15px 20px;
-          font-family:'Fredoka',sans-serif;
+          font-family:var(--font-fredoka), sans-serif;
           font-weight:600;
           font-size:16px;
           color:var(--teal-deep);
@@ -215,12 +223,12 @@ export default function EnlacesPage() {
       <div className="enlaces-root">
         <div className="enlaces-page">
           <div className="enlaces-banner">
-            <img className="enlaces-banner-mark" src="/images/logo-white.png" alt="Biodiversión" />
+            <Image className="enlaces-banner-mark" src="/images/logo-white.png" alt="Biodiversión" width={1652} height={685} />
           </div>
 
           <div className="enlaces-avatar-row">
             <div className="enlaces-avatar">
-              <img src="/images/enlaces-avatar.png" alt="Biodiversión" />
+              <Image src="/images/enlaces-avatar.png" alt="Biodiversión" width={400} height={400} />
             </div>
           </div>
 
@@ -265,10 +273,10 @@ export default function EnlacesPage() {
                 <div className="enlaces-panel">
                   <div className="enlaces-panel-label">Contáctanos</div>
                   <div className="enlaces-icon-row">
-                    <a className="enlaces-icon-btn" href="https://facebook.com/biodiversion" target="_blank" rel="noopener" aria-label="Facebook">
+                    <a className="enlaces-icon-btn" href="https://www.facebook.com/biodiversion" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.4v7A10 10 0 0 0 22 12z" fill="currentColor"/></svg>
                     </a>
-                    <a className="enlaces-icon-btn" href="tel:+529981290100" aria-label="Llamar">
+                    <a className="enlaces-icon-btn" href={TELEFONOS[0].tel} aria-label={`Llamar al ${TELEFONOS[0].display}`}>
                       <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1.1-.2 1.2.4 2.5.6 3.8.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.3.2 2.6.6 3.8.1.4 0 .8-.2 1.1L6.6 10.8z" fill="currentColor"/></svg>
                     </a>
                     <a
@@ -285,7 +293,22 @@ export default function EnlacesPage() {
               </details>
             </div>
 
-            <footer className="enlaces-footer">© 2025 · Marca y sitio por Team Magicbox Crew Studio</footer>
+            <div className="mt-8 w-full">
+              <p className="mb-2 text-center text-sm font-bold text-[var(--teal-deep)]">
+                Llámanos
+              </p>
+              <p className="text-center text-sm font-bold">
+                {TELEFONOS.map((telefono, indice) => (
+                  <span key={telefono.tel}>
+                    {indice > 0 && " · "}
+                    <a href={telefono.tel}>{telefono.display}</a>
+                  </span>
+                ))}
+              </p>
+              <FilaPersonajes compacta conTexto={false} />
+            </div>
+
+            <footer className="enlaces-footer">© {new Date().getFullYear()} · Marca y sitio por Team Magicbox Crew Studio</footer>
           </div>
         </div>
       </div>

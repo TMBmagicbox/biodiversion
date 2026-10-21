@@ -47,41 +47,48 @@ export default function LoginPage() {
         </h1>
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
-            <label className="text-sm font-bold text-brand-blue-dark">
+            <label htmlFor="admin-correo" className="text-sm font-bold text-brand-blue-dark">
               Correo
             </label>
             <input
+              id="admin-correo"
               type="email"
               required
+              autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-black/10 bg-white/70 px-3 py-2"
+              className="mt-1 w-full rounded-lg border border-[#5c6f68] bg-white px-3 py-2"
             />
           </div>
           <div>
-            <label className="text-sm font-bold text-brand-blue-dark">
+            <label htmlFor="admin-clave" className="text-sm font-bold text-brand-blue-dark">
               Contraseña
             </label>
             <input
+              id="admin-clave"
               type="password"
               required
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-black/10 bg-white/70 px-3 py-2"
+              className="mt-1 w-full rounded-lg border border-[#5c6f68] bg-white px-3 py-2"
             />
           </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && (
+            <p role="alert" className="text-sm font-bold text-red-800">
+              {error}
+            </p>
+          )}
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-full bg-brand-blue py-2.5 font-extrabold text-white transition-transform hover:scale-105 disabled:opacity-60"
+            className="w-full rounded-full bg-brand-blue-dark py-2.5 font-extrabold text-white disabled:opacity-60"
           >
             {loading ? "Entrando…" : "Entrar"}
           </button>
         </form>
-        <p className="mt-6 text-center text-xs text-foreground/50">
-          Los usuarios del personal se crean desde Supabase Auth. Ver{" "}
-          <code>README.md</code>.
+        <p className="mt-6 text-center text-sm text-foreground/80">
+          Acceso solo para el personal de Biodiversión.
         </p>
       </div>
     </div>

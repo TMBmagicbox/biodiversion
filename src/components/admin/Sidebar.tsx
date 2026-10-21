@@ -12,6 +12,7 @@ import {
   CreditCard,
   UserCog,
   ImageIcon,
+  Building2,
   Newspaper,
   MessageSquare,
   Video,
@@ -27,6 +28,7 @@ const items = [
   { href: "/admin/pagos", label: "Pagos", Icon: CreditCard },
   { href: "/admin/blog", label: "Blog / Redes sociales", Icon: Newspaper },
   { href: "/admin/inicio", label: "Banner de inicio", Icon: ImageIcon },
+  { href: "/admin/instalaciones", label: "Instalaciones", Icon: Building2 },
   { href: "/admin/mensajes", label: "Mensajes de contacto", Icon: MessageSquare },
   { href: "/admin/camaras", label: "Cámaras en vivo", Icon: Video },
   { href: "/admin/usuarios", label: "Usuarios del personal", Icon: UserCog },
@@ -47,7 +49,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             onClick={onNavigate}
             className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-bold transition-colors ${
               active
-                ? "bg-brand-blue text-white"
+                ? "bg-brand-blue-dark text-white"
                 : "text-brand-blue-dark hover:bg-white/60"
             }`}
           >

@@ -49,7 +49,7 @@ export default async function InicioAdminPage() {
             name="descripcion"
             rows={2}
             className="mt-1 w-full rounded-lg border border-black/10 bg-white/70 px-3 py-2"
-            placeholder="Texto corto debajo del título"
+            placeholder="Atendemos bebés desde los 3 meses hasta los 4 años."
           />
         </div>
         <div>

@@ -7,7 +7,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export async function subirFoto(
   supabase: SupabaseClient,
   file: FormDataEntryValue | null,
-  carpeta: "tutores" | "ninos" | "hero" | "blog",
+  carpeta: "tutores" | "ninos" | "hero" | "blog" | "instalaciones",
 ): Promise<string | null> {
   if (!file || !(file instanceof File) || file.size === 0) return null;
 
