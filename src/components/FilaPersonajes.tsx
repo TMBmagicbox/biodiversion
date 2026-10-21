@@ -8,10 +8,8 @@ export default function FilaPersonajes({
   compacta?: boolean;
   conTexto?: boolean;
 }) {
-  return (
-    <ul
-      className={`fila-personajes ${compacta ? "tam-sm" : ""}`}
-    >
+  const fila = (
+    <ul className={`fila-personajes ${compacta ? "tam-sm" : ""}`}>
       {PERSONAJES.map((personaje, indice) => (
         <li key={personaje.id}>
           <Image
@@ -23,21 +21,31 @@ export default function FilaPersonajes({
               indice === 1 ? "flotar-tarde" : ""
             } ${indice === 2 ? "flotar-mas" : ""}`}
           />
-          {conTexto && (
-            <div className="mt-3 text-center">
-              <h3 className="text-lg font-bold text-brand-blue-dark">
-                {personaje.nombre}
-              </h3>
-              <p className="text-sm font-bold text-brand-green-dark">
-                {personaje.edad}
-              </p>
-              <p className="mt-1 text-sm leading-relaxed text-foreground/80">
-                {personaje.bio}
-              </p>
-            </div>
-          )}
         </li>
       ))}
     </ul>
+  );
+
+  if (!conTexto) return fila;
+
+  return (
+    <div>
+      {fila}
+      <ul className="mt-4 grid list-none grid-cols-3 gap-3 p-0">
+        {PERSONAJES.map((personaje) => (
+          <li key={personaje.id} className="text-center">
+            <h3 className="text-lg font-bold text-brand-blue-dark">
+              {personaje.nombre}
+            </h3>
+            <p className="text-sm font-bold text-brand-green-dark">
+              {personaje.edad}
+            </p>
+            <p className="mt-1 text-sm leading-relaxed text-foreground/80">
+              {personaje.bio}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
