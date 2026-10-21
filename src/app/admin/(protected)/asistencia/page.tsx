@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { registrarEntrada, registrarSalida } from "@/app/admin/actions";
 import ContadorTiempo from "@/components/admin/ContadorTiempo";
 import FichaIdentificacion from "@/components/admin/FichaIdentificacion";
+import SelectorNinoAsistencia from "@/components/admin/SelectorNinoAsistencia";
 import { IdCard } from "lucide-react";
 
 function formatHora(iso: string | null) {
@@ -54,21 +55,12 @@ export default async function AsistenciaPage() {
         action={registrarEntrada}
         className="glass mt-6 flex flex-wrap items-end gap-4 rounded-2xl p-6"
       >
-        <div>
-          <label className="text-sm font-bold text-brand-blue-dark">Niño</label>
-          <select
-            name="nino_id"
-            required
-            className="mt-1 w-56 rounded-lg border border-black/10 px-3 py-2"
-          >
-            <option value="">Selecciona…</option>
-            {ninos?.map((n) => (
-              <option key={n.id} value={n.id}>
-                {n.nombre} {n.apellido_paterno}
-              </option>
-            ))}
-          </select>
-        </div>
+        <SelectorNinoAsistencia
+          ninos={(ninos ?? []).map((n) => ({
+            id: n.id,
+            nombre: `${n.nombre} ${n.apellido_paterno}`,
+          }))}
+        />
         <div>
           <label className="text-sm font-bold text-brand-blue-dark">
             Hora de entrada

@@ -1,10 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
+import { obtenerNinosPorVencerOVencidos } from "@/lib/deudores";
 import { Baby, Clock3, CreditCard } from "lucide-react";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
+  const hoy = new Date().toLocaleDateString("en-CA", {
+    timeZone: "America/Cancun",
+  });
 
-  const [{ count: totalNinos }, { count: presentesHoy }, { count: pagosPendientes }] =
+  const [{ count: totalNinos }, { count: presentesHoy }, porVencerOVencidos] =
     await Promise.all([
       supabase.from("ninos").select("*", { count: "exact", head: true }).eq("activo", true),
       supabase
@@ -12,11 +16,10 @@ export default async function DashboardPage() {
         .select("*", { count: "exact", head: true })
         .eq("fecha", new Date().toISOString().slice(0, 10))
         .is("hora_salida", null),
-      supabase
-        .from("pagos")
-        .select("*", { count: "exact", head: true })
-        .eq("estatus", "pendiente"),
+      obtenerNinosPorVencerOVencidos(hoy),
     ]);
+
+  const pagosPendientes = porVencerOVencidos.length;
 
   const tarjetas = [
     { label: "Niños activos", value: totalNinos ?? 0, Icon: Baby },

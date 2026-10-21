@@ -36,38 +36,50 @@ export default function CarruselDeudores({
   hoyISO: string;
 }) {
   const [indice, setIndice] = useState(0);
-  const [minimizado, setMinimizado] = useState(false);
+  // "auto": en pantallas angostas empieza minimizada; desde lg se ve la tarjeta.
+  const [vista, setVista] = useState<"auto" | "abierta" | "mini">("auto");
   // Si la lista se encoge (p. ej. alguien acaba de pagar), este índice
   // "recorta" al último válido sin necesitar un efecto para sincronizarlo.
   const indiceSeguro = deudores.length ? indice % deudores.length : 0;
 
   useEffect(() => {
-    if (deudores.length < 2 || minimizado) return;
+    if (deudores.length < 2 || vista === "mini") return;
     const intervalo = setInterval(() => {
       setIndice((i) => (i + 1) % deudores.length);
     }, 6000);
     return () => clearInterval(intervalo);
-  }, [deudores.length, minimizado]);
+  }, [deudores.length, vista]);
 
   if (deudores.length === 0) return null;
 
-  if (minimizado) {
-    return (
-      <button
-        type="button"
-        onClick={() => setMinimizado(false)}
-        className="fixed right-4 top-24 z-40 flex animate-pulse items-center gap-2 rounded-full bg-red-600 px-4 py-3 text-sm font-extrabold text-white shadow-2xl transition-transform hover:scale-105"
-      >
-        <AlertTriangle className="h-4 w-4" />
-        {deudores.length} con pago pendiente
-      </button>
-    );
-  }
+  const claseMini =
+    "fixed right-4 top-24 z-40 items-center gap-2 rounded-full bg-red-600 px-4 py-3 text-sm font-extrabold text-white shadow-2xl transition-transform hover:scale-105";
+  const claseTarjeta =
+    "fixed right-4 top-24 z-40 w-64 overflow-hidden rounded-3xl shadow-2xl";
 
   const actual = deudores[indiceSeguro];
 
+  const miniVisible = vista === "mini" || vista === "auto";
+  const tarjetaVisible = vista === "abierta" || vista === "auto";
+
   return (
-    <div className="fixed right-4 top-24 z-40 w-64 overflow-hidden rounded-3xl shadow-2xl">
+    <>
+      {miniVisible && (
+        <button
+          type="button"
+          onClick={() => setVista("abierta")}
+          className={`${claseMini} animate-pulse ${
+            vista === "auto" ? "flex lg:hidden" : "flex"
+          }`}
+        >
+          <AlertTriangle className="h-4 w-4" />
+          {deudores.length} con pago pendiente
+        </button>
+      )}
+      {tarjetaVisible && (
+    <div
+      className={`${claseTarjeta} ${vista === "auto" ? "hidden lg:block" : ""}`}
+    >
       {/* Cinta roja de alerta, flotando encima de la foto */}
       <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between bg-red-600/90 px-3 py-2 text-white backdrop-blur-sm">
         <p className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide">
@@ -76,7 +88,7 @@ export default function CarruselDeudores({
         </p>
         <button
           type="button"
-          onClick={() => setMinimizado(true)}
+          onClick={() => setVista("mini")}
           aria-label="Minimizar alerta"
           className="rounded-full p-1 hover:bg-white/20"
         >
@@ -158,5 +170,7 @@ export default function CarruselDeudores({
         </div>
       )}
     </div>
+      )}
+    </>
   );
 }
