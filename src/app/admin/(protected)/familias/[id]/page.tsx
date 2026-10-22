@@ -1,11 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, User, Baby, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, User, Baby, Pencil, Trash2, UserMinus, RotateCcw } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import {
   agregarNinoAFamilia,
   agregarPersonaAutorizada,
+  darDeBajaFamilia,
+  darDeBajaNino,
+  reactivarNino,
   eliminarFamilia,
   eliminarNino,
   eliminarPersonaAutorizada,
@@ -14,6 +17,7 @@ import FotoLightbox from "@/components/admin/FotoLightbox";
 import FichaIdentificacion from "@/components/admin/FichaIdentificacion";
 import InsigniaEstatusPago from "@/components/admin/InsigniaEstatusPago";
 import BotonConfirmar from "@/components/admin/BotonConfirmar";
+import BotonBaja from "@/components/admin/BotonBaja";
 import FotoInput from "@/components/admin/FotoInput";
 import type { Plan } from "@/components/admin/SelectorPlanPago";
 
@@ -66,7 +70,7 @@ export default async function FamiliaDetallePage({
     supabase
       .from("tutores")
       .select(
-        "*, tutores_ninos(parentesco, nino:ninos(id, nombre, apellido_paterno, apellido_materno, fecha_nacimiento, foto_url, salon, alergias, proxima_fecha_pago, plan:planes(nombre, tipo), personas_autorizadas(id, nombre, parentesco, telefono, identificacion)))",
+        "*, tutores_ninos(parentesco, nino:ninos(id, nombre, apellido_paterno, apellido_materno, fecha_nacimiento, foto_url, salon, alergias, activo, fecha_baja, motivo_baja, proxima_fecha_pago, plan:planes(nombre, tipo), personas_autorizadas(id, nombre, parentesco, telefono, identificacion)))",
       )
       .eq("id", id)
       .maybeSingle(),
@@ -122,6 +126,17 @@ export default async function FamiliaDetallePage({
               >
                 <Pencil className="h-3.5 w-3.5" />
               </Link>
+              <form action={darDeBajaFamilia}>
+                <input type="hidden" name="tutor_id" value={tutor.id} />
+                <input type="hidden" name="motivo" value="" />
+                <BotonBaja
+                  mensaje={`¿Dar de baja a la familia de ${tutor.nombre} ${tutor.apellido_paterno} y a sus hijos? Se conserva el historial y se puede reactivar.`}
+                  className="flex items-center gap-1 text-xs font-bold text-red-600 hover:underline"
+                >
+                  <UserMinus className="h-3.5 w-3.5" />
+                  Dar de baja
+                </BotonBaja>
+              </form>
               <form action={eliminarFamilia}>
                 <input type="hidden" name="tutor_id" value={tutor.id} />
                 <BotonConfirmar
@@ -159,6 +174,9 @@ export default async function FamiliaDetallePage({
               foto_url: string | null;
               salon: string | null;
               alergias: string | null;
+              activo: boolean;
+              fecha_baja: string | null;
+              motivo_baja: string | null;
               proxima_fecha_pago: string | null;
               plan: { nombre: string; tipo: string } | null;
               personas_autorizadas: {
@@ -214,6 +232,32 @@ export default async function FamiliaDetallePage({
                       >
                         <Pencil className="h-3.5 w-3.5" />
                       </Link>
+                      {tn.nino.activo === false ? (
+                        <form action={reactivarNino}>
+                          <input type="hidden" name="nino_id" value={tn.nino.id} />
+                          <input type="hidden" name="volver" value={`/admin/familias/${tutor.id}`} />
+                          <button
+                            type="submit"
+                            className="flex items-center gap-1 text-xs font-bold text-brand-green-dark hover:underline"
+                          >
+                            <RotateCcw className="h-3 w-3" />
+                            Reactivar
+                          </button>
+                        </form>
+                      ) : (
+                        <form action={darDeBajaNino}>
+                          <input type="hidden" name="nino_id" value={tn.nino.id} />
+                          <input type="hidden" name="motivo" value="" />
+                          <input type="hidden" name="volver" value={`/admin/familias/${tutor.id}`} />
+                          <BotonBaja
+                            mensaje={`¿Dar de baja a ${tn.nino.nombre}?`}
+                            className="flex items-center gap-1 text-xs font-bold text-red-600 hover:underline"
+                          >
+                            <UserMinus className="h-3 w-3" />
+                            Baja
+                          </BotonBaja>
+                        </form>
+                      )}
                       <form action={eliminarNino}>
                         <input type="hidden" name="nino_id" value={tn.nino.id} />
                         <input type="hidden" name="tutor_id" value={tutor.id} />
@@ -229,6 +273,15 @@ export default async function FamiliaDetallePage({
                   <p className="text-xs text-foreground/60">
                     {edad(tn.nino.fecha_nacimiento)} · {tn.parentesco}
                   </p>
+                  {tn.nino.activo === false && (
+                    <p className="mt-1 rounded-lg bg-red-50 px-2 py-1 text-[11px] font-bold text-red-700">
+                      Dado de baja
+                      {tn.nino.fecha_baja
+                        ? ` el ${new Date(tn.nino.fecha_baja).toLocaleDateString("es-MX", { timeZone: "America/Cancun" })}`
+                        : ""}
+                      {tn.nino.motivo_baja ? ` · ${tn.nino.motivo_baja}` : ""}
+                    </p>
+                  )}
                   <div className="mt-1 flex flex-wrap gap-1.5">
                     {insigniaPlan(tn.nino.plan ?? null)}
                     {tn.nino.proxima_fecha_pago && (

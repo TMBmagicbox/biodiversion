@@ -1,7 +1,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
-import { Plus, Baby, UserPlus, Clock, Users } from "lucide-react";
+import { Plus, Baby, UserPlus, Clock, Users, UserMinus, RotateCcw } from "lucide-react";
+import { darDeBajaNino, reactivarNino } from "@/app/admin/actions";
+import BotonBaja from "@/components/admin/BotonBaja";
 import FichaIdentificacion from "@/components/admin/FichaIdentificacion";
 import InsigniaEstatusPago from "@/components/admin/InsigniaEstatusPago";
 
@@ -51,6 +53,8 @@ type Nino = {
   salon: string | null;
   plan: { nombre: string; tipo: string } | null;
   proxima_fecha_pago: string | null;
+  fecha_baja: string | null;
+  motivo_baja: string | null;
   tutores_ninos: {
     parentesco: string;
     tutor: {
@@ -67,7 +71,15 @@ type Nino = {
   }[];
 };
 
-function NinoCard({ n, hoy }: { n: Nino; hoy: string }) {
+function NinoCard({
+  n,
+  hoy,
+  baja = false,
+}: {
+  n: Nino;
+  hoy: string;
+  baja?: boolean;
+}) {
   const tutores = (n.tutores_ninos ?? []).filter((tn) => tn.tutor);
 
   return (
@@ -119,6 +131,18 @@ function NinoCard({ n, hoy }: { n: Nino; hoy: string }) {
             )}
           </div>
 
+          {baja && (
+            <p className="mt-2 rounded-lg bg-red-50 px-2 py-1 text-[11px] font-bold text-red-700">
+              Baja{" "}
+              {n.fecha_baja
+                ? new Date(n.fecha_baja).toLocaleDateString("es-MX", {
+                    timeZone: "America/Cancun",
+                  })
+                : ""}
+              {n.motivo_baja ? ` · ${n.motivo_baja}` : ""}
+            </p>
+          )}
+
           <div className="mt-3 flex flex-wrap gap-1.5">
             {tutores.length ? (
               tutores.map((tn) => (
@@ -141,13 +165,47 @@ function NinoCard({ n, hoy }: { n: Nino; hoy: string }) {
               </Link>
             )}
           </div>
+
+          <div className="mt-3">
+            {baja ? (
+              <form action={reactivarNino}>
+                <input type="hidden" name="nino_id" value={n.id} />
+                <input type="hidden" name="volver" value="/admin/familias?baja=1" />
+                <button
+                  type="submit"
+                  className="flex items-center gap-1 text-xs font-bold text-brand-green-dark hover:underline"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  Reactivar
+                </button>
+              </form>
+            ) : (
+              <form action={darDeBajaNino}>
+                <input type="hidden" name="nino_id" value={n.id} />
+                <input type="hidden" name="motivo" value="" />
+                <BotonBaja
+                  mensaje={`¿Dar de baja a ${n.nombre} ${n.apellido_paterno}? Se conserva su historial y se puede reactivar.`}
+                  className="flex items-center gap-1 text-xs font-bold text-red-600 hover:underline"
+                >
+                  <UserMinus className="h-3 w-3" />
+                  Dar de baja
+                </BotonBaja>
+              </form>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-export default async function FamiliasPage() {
+export default async function FamiliasPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ baja?: string }>;
+}) {
+  const { baja } = await searchParams;
+  const verBajas = baja === "1";
   const supabase = await createClient();
   const hoy = new Date().toLocaleDateString("en-CA", {
     timeZone: "America/Cancun",
@@ -155,9 +213,9 @@ export default async function FamiliasPage() {
   const { data: ninos } = await supabase
     .from("ninos")
     .select(
-      "id, nombre, apellido_paterno, apellido_materno, fecha_nacimiento, foto_url, salon, plan:planes(nombre, tipo), proxima_fecha_pago, tutores_ninos(parentesco, tutor:tutores(id, nombre, apellido_paterno, telefono)), personas_autorizadas(nombre, parentesco, telefono)",
+      "id, nombre, apellido_paterno, apellido_materno, fecha_nacimiento, foto_url, salon, plan:planes(nombre, tipo), proxima_fecha_pago, fecha_baja, motivo_baja, tutores_ninos(parentesco, tutor:tutores(id, nombre, apellido_paterno, telefono)), personas_autorizadas(nombre, parentesco, telefono)",
     )
-    .eq("activo", true)
+    .eq("activo", !verBajas)
     .order("nombre");
 
   const ninosList = (ninos ?? []) as unknown as Nino[];
@@ -172,19 +230,29 @@ export default async function FamiliasPage() {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-brand-blue-dark">Niños</h1>
+          <h1 className="text-2xl font-black text-brand-blue-dark">
+            {verBajas ? "Niños dados de baja" : "Niños"}
+          </h1>
           <p className="mt-1 text-sm text-foreground/60">
             Cada niño/a con su plan y su tutor. Toca el nombre del tutor para
             ver o editar la familia completa.
           </p>
         </div>
-        <Link
-          href="/admin/familias/nuevo"
-          className="flex items-center gap-2 rounded-full bg-brand-green px-4 py-2 text-sm font-extrabold text-white"
-        >
-          <Plus className="h-4 w-4" strokeWidth={2.5} />
-          Registrar niño/a
-        </Link>
+        <div className="flex flex-col items-end gap-2">
+          <Link
+            href="/admin/familias/nuevo"
+            className="flex items-center gap-2 rounded-full bg-brand-green px-4 py-2 text-sm font-extrabold text-white"
+          >
+            <Plus className="h-4 w-4" strokeWidth={2.5} />
+            Registrar niño/a
+          </Link>
+          <Link
+            href={verBajas ? "/admin/familias" : "/admin/familias?baja=1"}
+            className="text-xs font-bold text-brand-blue-dark hover:underline"
+          >
+            {verBajas ? "← Ver niños activos" : "Ver dados de baja"}
+          </Link>
+        </div>
       </div>
 
       <h2 className="mt-8 flex items-center gap-2 text-lg font-extrabold text-brand-blue-dark">
@@ -196,7 +264,7 @@ export default async function FamiliasPage() {
       </p>
       <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {tiempoCompleto.map((n) => (
-          <NinoCard key={n.id} n={n} hoy={hoy} />
+          <NinoCard key={n.id} n={n} hoy={hoy} baja={verBajas} />
         ))}
         {!tiempoCompleto.length && (
           <p className="text-center text-foreground/50">
@@ -214,7 +282,7 @@ export default async function FamiliasPage() {
       </p>
       <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {porHoras.map((n) => (
-          <NinoCard key={n.id} n={n} hoy={hoy} />
+          <NinoCard key={n.id} n={n} hoy={hoy} baja={verBajas} />
         ))}
         {!porHoras.length && (
           <p className="text-center text-foreground/50">
@@ -225,7 +293,7 @@ export default async function FamiliasPage() {
 
       {!ninosList.length && (
         <p className="mt-6 text-center text-foreground/50">
-          Aún no hay niños registrados.
+          {verBajas ? "No hay niños dados de baja." : "Aún no hay niños registrados."}
         </p>
       )}
     </div>

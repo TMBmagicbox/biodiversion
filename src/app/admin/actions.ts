@@ -327,6 +327,89 @@ export async function eliminarNino(formData: FormData) {
   redirect(`/admin/familias/${tutorId}`);
 }
 
+/** Ruta segura a la que volver después de una baja/reactivación. */
+function rutaDeRegreso(formData: FormData, porDefecto: string) {
+  const volver = String(formData.get("volver") ?? "");
+  return volver.startsWith("/admin/") ? volver : porDefecto;
+}
+
+function revalidarListasDeNinos() {
+  revalidatePath("/admin");
+  revalidatePath("/admin/familias");
+  revalidatePath("/admin/asistencia");
+  revalidatePath("/admin/pagos");
+}
+
+/** Da de baja a un niño/a (baja suave): deja de aparecer en listas, asistencia
+ * y recordatorios, pero se conserva todo su historial y se puede reactivar. */
+export async function darDeBajaNino(formData: FormData) {
+  const supabase = await createClient();
+  const ninoId = String(formData.get("nino_id"));
+  const motivo = String(formData.get("motivo") ?? "").trim() || null;
+
+  const { error } = await supabase
+    .from("ninos")
+    .update({
+      activo: false,
+      fecha_baja: new Date().toISOString(),
+      motivo_baja: motivo,
+    })
+    .eq("id", ninoId);
+  if (error) throw new Error(error.message);
+
+  revalidarListasDeNinos();
+  redirect(rutaDeRegreso(formData, "/admin/familias"));
+}
+
+/** Da de baja a una familia: baja suave de todos sus hijos que no tengan otro
+ * tutor vinculado. */
+export async function darDeBajaFamilia(formData: FormData) {
+  const supabase = await createClient();
+  const tutorId = String(formData.get("tutor_id"));
+  const motivo = String(formData.get("motivo") ?? "").trim() || null;
+
+  const { data: vinculos } = await supabase
+    .from("tutores_ninos")
+    .select("nino_id")
+    .eq("tutor_id", tutorId);
+
+  const ahora = new Date().toISOString();
+  for (const v of vinculos ?? []) {
+    const ninoId = v.nino_id as string;
+    const { count } = await supabase
+      .from("tutores_ninos")
+      .select("*", { count: "exact", head: true })
+      .eq("nino_id", ninoId)
+      .neq("tutor_id", tutorId);
+    if (count) continue; // otro tutor lo comparte: no se da de baja
+
+    const { error } = await supabase
+      .from("ninos")
+      .update({ activo: false, fecha_baja: ahora, motivo_baja: motivo })
+      .eq("id", ninoId);
+    if (error) throw new Error(error.message);
+  }
+
+  revalidarListasDeNinos();
+  revalidatePath(`/admin/familias/${tutorId}`);
+  redirect(rutaDeRegreso(formData, "/admin/familias"));
+}
+
+/** Reactiva a un niño/a dado de baja. */
+export async function reactivarNino(formData: FormData) {
+  const supabase = await createClient();
+  const ninoId = String(formData.get("nino_id"));
+
+  const { error } = await supabase
+    .from("ninos")
+    .update({ activo: true, fecha_baja: null, motivo_baja: null })
+    .eq("id", ninoId);
+  if (error) throw new Error(error.message);
+
+  revalidarListasDeNinos();
+  redirect(rutaDeRegreso(formData, "/admin/familias"));
+}
+
 /** Agrega una persona autorizada a recoger a un niño/a, además de sus
  * tutores (por ejemplo la abuela, un tío, o alguien de confianza). */
 export async function agregarPersonaAutorizada(formData: FormData) {
