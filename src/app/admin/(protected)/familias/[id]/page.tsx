@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, User, Baby, Pencil, Trash2, UserMinus, RotateCcw } from "lucide-react";
+import { ArrowLeft, User, Baby, Pencil, Trash2, UserMinus, RotateCcw, ScanFace } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import {
   agregarNinoAFamilia,
@@ -151,6 +151,13 @@ export default async function FamiliaDetallePage({
           <p className="text-xs text-foreground/60">
             {tutor.telefono} {tutor.email ? `· ${tutor.email}` : ""}
           </p>
+          <Link
+            href={`/admin/familias/${tutor.id}/consentimiento`}
+            className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-brand-blue-dark hover:underline"
+          >
+            <ScanFace className="h-3.5 w-3.5" />
+            Reconocimiento facial
+          </Link>
           {tutor.direccion && (
             <p className="text-xs text-foreground/60">{tutor.direccion}</p>
           )}
